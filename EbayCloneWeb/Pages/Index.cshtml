@@ -1,0 +1,139 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero bg-primary text-white py-4 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">EbayClone</h2>
+        <form class="d-flex" method="get">
+            <input id="heroQ" class="form-control me-2" name="q" placeholder="Search for products, brands and more" value="@Model.Q" />
+            <button class="btn btn-dark">Search</button>
+        </form>
+    </div>
+ </div>
+
+<div class="container">
+    <div class="d-flex align-items-center mb-3">
+        <h3 class="me-3"><span class="text-danger">🔥</span> Featured Products</h3>
+        <small class="text-muted">Best picks for you</small>
+    </div>
+
+    <form id="filterForm" class="row g-2 align-items-center mb-4" method="get">
+        <div class="col-md-4">
+            <input id="q" name="q" value="@Model.Q" class="form-control" placeholder="Search..." />
+        </div>
+        <div class="col-md-2">
+            <select id="categoryId" name="categoryId" class="form-select">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="orderBy" name="orderBy" class="form-select">
+                <option value="">Order by</option>
+                <option value="price">Price</option>
+                <option value="title">Title</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="sortDir" name="sortDir" class="form-select">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <select id="pageSize" name="pageSize" class="form-select">
+                <option value="8">8</option>
+                <option value="16" selected>16</option>
+                <option value="32">32</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="button" id="clearFilters" class="btn btn-outline-secondary w-100">Clear</button>
+        </div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="text-muted">Showing @Model.Products.Count() of @Model.TotalItems items</div>
+        <div></div>
+    </div>
+
+    <div id="productGridRow" class="row">
+        @foreach (var p in Model.Products)
+        {
+            var img = "/images/placeholder.png";
+            if (p.ValueKind == System.Text.Json.JsonValueKind.Object && p.TryGetProperty("images", out var imagesProp))
+            {
+                if (imagesProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    img = imagesProp.GetString() ?? img;
+                }
+                else if (imagesProp.ValueKind == System.Text.Json.JsonValueKind.Array && imagesProp.GetArrayLength() > 0)
+                {
+                    var first = imagesProp[0];
+                    if (first.ValueKind == System.Text.Json.JsonValueKind.String)
+                        img = first.GetString() ?? img;
+                }
+            }
+
+            var title = p.TryGetProperty("title", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String ? t.GetString() : "";
+            var desc = p.TryGetProperty("description", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String ? d.GetString() : "";
+            var price = p.TryGetProperty("price", out var pr) && (pr.ValueKind == System.Text.Json.JsonValueKind.Number) ? pr.GetDecimal() : 0;
+            var id = p.TryGetProperty("id", out var pid) && pid.ValueKind == System.Text.Json.JsonValueKind.Number ? pid.GetInt32() : 0;
+
+            // seller extraction
+            string sellerLine = "Seller: unknown";
+            if (p.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                if (p.TryGetProperty("seller", out var sellerProp) && sellerProp.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    if (sellerProp.TryGetProperty("email", out var sem) && sem.ValueKind == System.Text.Json.JsonValueKind.String)
+                        sellerLine = $"Seller: {sem.GetString()}";
+                    else if (sellerProp.TryGetProperty("username", out var sun) && sun.ValueKind == System.Text.Json.JsonValueKind.String)
+                        sellerLine = $"Seller: {sun.GetString()}";
+                }
+                else if (p.TryGetProperty("sellerId", out var sid) && sid.ValueKind == System.Text.Json.JsonValueKind.Number)
+                {
+                    sellerLine = $"Seller: #{sid.GetInt32()}";
+                }
+            }
+
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 border rounded shadow-sm">
+                    <div class="ratio ratio-4x3">
+                        <img src="@img" class="card-img-top rounded-top" alt="@title" style="object-fit:cover" />
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@title</h5>
+                        <p class="text-muted small mb-2">@desc</p>
+
+                        <div class="d-flex align-items-center mb-2">
+                            <h5 class="text-danger mb-0 me-3">$@string.Format("{0:0.00}", price)</h5>
+                            <span class="badge bg-success ms-auto">⭐ 4.0</span>
+                        </div>
+
+                        <div class="mb-3 text-muted small"><i class="bi bi-person-fill"></i> @sellerLine</div>
+
+                        <div class="mt-auto">
+                            <a class="btn btn-primary w-100" asp-page="/Order/Create" asp-route-id="@id"><i class="bi bi-cart-fill"></i> Buy Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul id="pagination" class="pagination">
+                @{ var totalPages = (int)System.Math.Ceiling(Model.TotalItems / (double)Model.PageSize); }
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    var css = i == Model.Page ? "active" : "";
+                    <li class="page-item @(css)"><a class="page-link" href="#" data-page="@i">@i</a></li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>

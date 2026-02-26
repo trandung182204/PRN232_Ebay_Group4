@@ -1,0 +1,42 @@
+@page
+@model EbayCloneWeb.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow border-0">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-0">Welcome back</h3>
+                        <p class="text-muted small">Sign in to continue to EbayClone</p>
+                    </div>
+
+                    <form method="post">
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label small">Email</label>
+                            <input asp-for="Email" class="form-control form-control-lg" placeholder="you@example.com" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label small">Password</label>
+                            <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="Enter your password" />
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Sign in</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a asp-page="/Index">Back to home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
