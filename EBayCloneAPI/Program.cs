@@ -1,5 +1,6 @@
 
 using System;
+using Serilog;
 using EBayAPI.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,19 @@ namespace EBayCloneAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithThreadId()
+                .WriteTo.Console()
+                .WriteTo.File("logs/ebayclone-.txt",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 7)
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
 
             // Add services to the container.
 
@@ -59,6 +73,8 @@ namespace EBayCloneAPI
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            app.UseSerilogRequestLogging();
 
             // Configure the HTTP request pipeline.
             // Enable Swagger UI in all environments for testing
