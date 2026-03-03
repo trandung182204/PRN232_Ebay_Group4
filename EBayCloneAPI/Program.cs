@@ -1,9 +1,10 @@
 
-using Microsoft.EntityFrameworkCore;
+using System;
+using EBayAPI.Configurations;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
 
 namespace EBayCloneAPI
 {
@@ -34,6 +35,12 @@ namespace EBayCloneAPI
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            builder.Services
+                .AddOptions<OrderCleanupSettings>()
+                .Bind(builder.Configuration.GetSection("OrderCleanupSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
 
             // Repositories
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IUserRepository, EBayCloneAPI.Repositories.UserRepository>();

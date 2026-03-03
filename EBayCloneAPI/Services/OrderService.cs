@@ -1,11 +1,14 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using EBayAPI.Configurations;
+using EBayAPI.Enums;
 using EBayCloneAPI.Data;
 using EBayCloneAPI.Models;
 using EBayCloneAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace EBayCloneAPI.Services
 {
@@ -16,14 +19,18 @@ namespace EBayCloneAPI.Services
         private readonly IShippingService _shipping;
         private readonly IEmailService _email;
         private readonly ILogger<OrderService> _logger;
+        private readonly OrderCleanupSettings _settings;
 
-        public OrderService(ApplicationDbContext db, IPaymentService payment, IShippingService shipping, IEmailService email, ILogger<OrderService> logger)
+        public OrderService(ApplicationDbContext db, IPaymentService payment,
+            IShippingService shipping, IEmailService email, ILogger<OrderService> logger,
+            IOptions<OrderCleanupSettings> options)
         {
             _db = db;
             _payment = payment;
             _shipping = shipping;
             _email = email;
             _logger = logger;
+            _settings = options.Value;
         }
 
         public async Task<OrderTable> CreateOrderAsync(int userId, int productId, int quantity, string region, string paymentMethod, string authToken, string secureKey, string? couponCode = null)
@@ -47,7 +54,7 @@ namespace EBayCloneAPI.Services
             {
                 BuyerId = userId,
                 OrderDate = DateTime.UtcNow,
-                Status = "Pending",
+                Status = OrderStatus.PendingPayment,
                 TotalPrice = total
             };
             _db.OrderTables.Add(order);
@@ -78,7 +85,7 @@ namespace EBayCloneAPI.Services
             _db.Payments.Add(payment);
             // Log transaction id separately (not stored in DB scaffolded model)
             _logger.LogInformation("Payment transaction id for order {orderId}: {tx}", order.Id, tx);
-            order.Status = "Paid";
+            order.Status = OrderStatus.Paid;
             await _db.SaveChangesAsync();
 
             // Send payment confirmation
@@ -93,7 +100,7 @@ namespace EBayCloneAPI.Services
             if (shipSuccess)
             {
                 _db.ShippingInfos.Add(new ShippingInfo { OrderId = order.Id, TrackingNumber = tracking, Status = "Created" });
-                order.Status = "Shipped";
+                order.Status = OrderStatus.Completed;
                 await _db.SaveChangesAsync();
             }
             else
@@ -106,19 +113,40 @@ namespace EBayCloneAPI.Services
 
         public async Task CancelUnpaidOrdersAsync()
         {
-            var cutoff = DateTime.UtcNow.AddMinutes(-30);
-            var stale = await _db.OrderTables.Where(o => o.Status == "Pending" && o.OrderDate <= cutoff).ToListAsync();
-            foreach (var o in stale)
+            var cutoff = DateTime.UtcNow.AddMinutes(-_settings.PaymentTimeoutMinutes);
+
+            // Get candidates first (Id + BuyerId) to avoid loading full entities
+            var candidates = await _db.OrderTables
+                .Where(o => o.Status == OrderStatus.PendingPayment
+                            && o.OrderDate != null && o.OrderDate <= cutoff)
+                .Select(o => new { o.Id, o.BuyerId })
+                .ToListAsync();
+
+            int cancelled = 0;
+            foreach (var c in candidates)
             {
-                o.Status = "Cancelled";
-                _logger.LogInformation("Auto-cancelling order {orderId}", o.Id);
-                var user = await _db.Users.FindAsync(o.BuyerId);
-                if (user != null && !string.IsNullOrEmpty(user.Email))
+                // Atomic DB-side update: set status to Cancelled only if still PendingPayment
+                var affected = await _db.OrderTables
+                    .Where(o => o.Id == c.Id && o.Status == OrderStatus.PendingPayment)
+                    .ExecuteUpdateAsync(s => s.SetProperty(o => o.Status, OrderStatus.Cancelled));
+
+                if (affected == 1)
                 {
-                    await _email.SendOrderStatusChangeAsync(user.Email, o.Id.ToString(), "Cancelled");
+                    cancelled++;
+                    _logger.LogInformation("Auto-cancelling order {orderId}", c.Id);
+
+                    if (c.BuyerId != null)
+                    {
+                        var user = await _db.Users.FindAsync(c.BuyerId);
+                        if (user != null && !string.IsNullOrEmpty(user.Email))
+                        {
+                            await _email.SendOrderStatusChangeAsync(user.Email, c.Id.ToString(), "Cancelled");
+                        }
+                    }
                 }
             }
-            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("AutoCancel completed. {count} orders cancelled", cancelled);
         }
 
         private decimal CalculateShippingFee(string region)
