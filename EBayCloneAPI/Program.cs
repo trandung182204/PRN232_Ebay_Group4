@@ -21,8 +21,10 @@ namespace EBayCloneAPI
                 .Enrich.WithMachineName()
                 .Enrich.WithThreadId()
                 .WriteTo.Console()
-                .WriteTo.File("logs/ebayclone-.txt",
+                .WriteTo.File("logs/ebayclone_.txt",
                     rollingInterval: RollingInterval.Day,
+                    fileSizeLimitBytes: 10_000_000,
+                    rollOnFileSizeLimit: true,
                     retainedFileCountLimit: 7)
                 .CreateLogger();
 
