@@ -1,0 +1,56 @@
+services:
+
+  api1:
+    build:
+      context: ./EbayCloneAPI
+      dockerfile: Dockerfile
+    container_name: ebay_api_1
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    restart: unless-stopped
+
+  api2:
+    build:
+      context: ./EbayCloneAPI
+      dockerfile: Dockerfile
+    container_name: ebay_api_2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    restart: unless-stopped
+
+  web1:
+    build:
+      context: ./EbayCloneWeb
+      dockerfile: Dockerfile
+    container_name: ebay_web_1
+    depends_on:
+      - api1
+      - api2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    restart: unless-stopped
+
+  web2:
+    build:
+      context: ./EbayCloneWeb
+      dockerfile: Dockerfile
+    container_name: ebay_web_2
+    depends_on:
+      - api1
+      - api2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_lb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api1
+      - api2
+      - web1
+      - web2
