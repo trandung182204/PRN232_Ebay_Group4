@@ -29,7 +29,8 @@ namespace EBayCloneAPI.Services
                 {
                     using var scope = _provider.CreateScope();
                     var orders = scope.ServiceProvider.GetRequiredService<IOrderService>();
-                    await orders.CancelUnpaidOrdersAsync();
+                    
+                    await orders.AutoCancelOnlinePayments();
                 }
                 catch (System.Exception ex)
                 {

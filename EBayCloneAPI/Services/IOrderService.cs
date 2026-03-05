@@ -24,7 +24,7 @@ namespace EBayCloneAPI.Services
             string secureKey);
 
         // Auto cancel unpaid
-        Task CancelUnpaidOrdersAsync();
+        Task AutoCancelOnlinePayments();
 
         // Order detail
         Task<OrderTable?> GetOrderDetailAsync(int id);

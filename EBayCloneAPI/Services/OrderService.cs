@@ -37,7 +37,6 @@ namespace EBayCloneAPI.Services
             _settings = options.Value;
             _shippingHooks = shippingHooks;
             _paymentHooks = paymentHooks;
-            _shippingHooks = shippingHooks;
         }
 
         public async Task<OrderTable> CreateOrderAsync(
@@ -152,42 +151,61 @@ namespace EBayCloneAPI.Services
 
 
 
-        public async Task CancelUnpaidOrdersAsync()
+        public async Task AutoCancelOnlinePayments()
         {
             var cutoff = DateTime.UtcNow.AddMinutes(-_settings.PaymentTimeoutMinutes);
 
-            // Get candidates first (Id + BuyerId) to avoid loading full entities
             var candidates = await _db.OrderTables
-                .Where(o => o.Status == OrderStatus.PendingPayment
-                            && o.OrderDate != null && o.OrderDate <= cutoff)
-                .Select(o => new { o.Id, o.BuyerId })
+                .Join(_db.Payments,
+                    o => o.Id,
+                    p => p.OrderId,
+                    (o, p) => new
+                    {
+                        o.Id,
+                        o.BuyerId,
+                        o.Status,
+                        o.OrderDate,
+                        p.Method
+                    })
+                .Where(x =>
+                    x.Status == OrderStatus.PendingPayment &&
+                    x.OrderDate != null &&
+                    x.OrderDate <= cutoff &&
+                    x.Method != "COD") // ❗ chỉ cancel online payments
                 .ToListAsync();
 
             int cancelled = 0;
+
             foreach (var c in candidates)
             {
-                // Atomic DB-side update: set status to Cancelled only if still PendingPayment
                 var affected = await _db.OrderTables
                     .Where(o => o.Id == c.Id && o.Status == OrderStatus.PendingPayment)
-                    .ExecuteUpdateAsync(s => s.SetProperty(o => o.Status, OrderStatus.Cancelled));
+                    .ExecuteUpdateAsync(s =>
+                        s.SetProperty(o => o.Status, OrderStatus.Cancelled));
 
                 if (affected == 1)
                 {
                     cancelled++;
-                    _logger.LogInformation("Auto-cancelling order {orderId}", c.Id);
+
+                    _logger.LogInformation("Auto cancelling ONLINE order {orderId}", c.Id);
 
                     if (c.BuyerId != null)
                     {
                         var user = await _db.Users.FindAsync(c.BuyerId);
+
                         if (user != null && !string.IsNullOrEmpty(user.Email))
                         {
-                            await _email.SendOrderStatusChangeAsync(user.Email, c.Id.ToString(), "Cancelled");
+                            await _email.SendOrderStatusChangeAsync(
+                                user.Email,
+                                c.Id.ToString(),
+                                "Cancelled"
+                            );
                         }
                     }
                 }
             }
 
-            _logger.LogInformation("AutoCancel completed. {count} orders cancelled", cancelled);
+            _logger.LogInformation("AutoCancelOnlinePayments finished. {count} orders cancelled", cancelled);
         }
 
         private decimal CalculateShippingFee(string region)
