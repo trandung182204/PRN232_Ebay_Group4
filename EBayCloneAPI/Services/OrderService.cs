@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EBayAPI.Configurations;
 using EBayAPI.Enums;
+using EBayAPI.Models.Hooks;
 using EBayCloneAPI.Data;
 using EBayCloneAPI.Models;
 using EBayCloneAPI.Repositories;
@@ -20,10 +21,13 @@ namespace EBayCloneAPI.Services
         private readonly IEmailService _email;
         private readonly ILogger<OrderService> _logger;
         private readonly OrderCleanupSettings _settings;
+        private readonly IEnumerable<IPaymentEventHook> _paymentHooks;
+        private readonly IEnumerable<IShippingEventHook> _shippingHooks;
 
         public OrderService(ApplicationDbContext db, IPaymentService payment,
             IShippingService shipping, IEmailService email, ILogger<OrderService> logger,
-            IOptions<OrderCleanupSettings> options)
+            IOptions<OrderCleanupSettings> options, IEnumerable<IShippingEventHook> shippingHooks,
+            IEnumerable<IPaymentEventHook> paymentHooks)
         {
             _db = db;
             _payment = payment;
@@ -31,21 +35,29 @@ namespace EBayCloneAPI.Services
             _email = email;
             _logger = logger;
             _settings = options.Value;
+            _shippingHooks = shippingHooks;
+            _paymentHooks = paymentHooks;
+            _shippingHooks = shippingHooks;
         }
 
-        public async Task<OrderTable> CreateOrderAsync(int userId, int productId, int quantity, string region, string paymentMethod, string authToken, string secureKey, string? couponCode = null)
+        public async Task<OrderTable> CreateOrderAsync(
+    int userId,
+    int productId,
+    int quantity,
+    string region,
+    string paymentMethod,
+    string authToken,
+    string secureKey,
+    string? couponCode = null)
         {
             var product = await _db.Products.FindAsync(productId);
-            if (product == null) throw new ArgumentException("Product not found");
+            if (product == null)
+                throw new ArgumentException("Product not found");
 
+            // Calculate price
             decimal productTotal = (product.Price ?? 0) * quantity;
             decimal shippingFee = CalculateShippingFee(region);
-            decimal discount = 0;
-            if (!string.IsNullOrEmpty(couponCode))
-            {
-                // simple coupon simulation
-                discount = 5;
-            }
+            decimal discount = string.IsNullOrEmpty(couponCode) ? 0 : 5;
 
             decimal total = productTotal + shippingFee - discount;
 
@@ -57,22 +69,26 @@ namespace EBayCloneAPI.Services
                 Status = OrderStatus.PendingPayment,
                 TotalPrice = total
             };
+
             _db.OrderTables.Add(order);
             await _db.SaveChangesAsync();
 
-            _logger.LogInformation("Created order {orderId} total {total}", order.Id, total);
+            _logger.LogInformation("Order {OrderId} created with total {Total}", order.Id, total);
 
-            // Process payment
-            var (success, tx) = await _payment.PayAsync(paymentMethod, total, authToken, secureKey);
-            _logger.LogInformation("Payment attempt for order {orderId} success={success} tx={tx}", order.Id, success, tx);
+            // Call payment module
+            var (success, transactionId) =
+                await _payment.PayAsync(paymentMethod, total, authToken, secureKey);
+
+            _logger.LogInformation(
+                "Payment attempt Order {OrderId} Success={Success} Tx={TransactionId}",
+                order.Id, success, transactionId);
 
             if (!success)
             {
-                // leave pending
                 return order;
             }
 
-            // mark paid
+            // Save payment
             var payment = new Payment
             {
                 OrderId = order.Id,
@@ -82,30 +98,78 @@ namespace EBayCloneAPI.Services
                 Status = "Paid",
                 PaidAt = DateTime.UtcNow
             };
+
             _db.Payments.Add(payment);
-            // Log transaction id separately (not stored in DB scaffolded model)
-            _logger.LogInformation("Payment transaction id for order {orderId}: {tx}", order.Id, tx);
+
             order.Status = OrderStatus.Paid;
+
             await _db.SaveChangesAsync();
 
-            // Send payment confirmation
+            _logger.LogInformation(
+                "Payment successful for Order {OrderId} Tx={TransactionId}",
+                order.Id, transactionId);
+
+            // Execute payment hooks
+            foreach (var hook in _paymentHooks)
+            {
+                try
+                {
+                    await hook.OnPaymentSuccessAsync(order, payment, transactionId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Payment hook failed for Order {OrderId}", order.Id);
+                }
+            }
+
+            // Send email
             var user = await _db.Users.FindAsync(userId);
-            if (user != null && !string.IsNullOrEmpty(user.Email))
+            if (user?.Email != null)
             {
                 await _email.SendPaymentConfirmationAsync(user.Email, order.Id.ToString());
             }
 
             // Create shipment
-            var (shipSuccess, tracking) = await _shipping.CreateShipmentAsync(order.Id, region, authToken, "SHIP_SECURE_456");
-            if (shipSuccess)
+            var (shipSuccess, trackingNumber) =
+                await _shipping.CreateShipmentAsync(order.Id, region, authToken, "SHIP_SECURE_456");
+
+            if (!shipSuccess)
             {
-                _db.ShippingInfos.Add(new ShippingInfo { OrderId = order.Id, TrackingNumber = tracking, Status = "Created" });
-                order.Status = OrderStatus.Completed;
-                await _db.SaveChangesAsync();
+                _logger.LogWarning("Shipment creation failed for Order {OrderId}", order.Id);
+                return order;
             }
-            else
+
+            // Save shipping info
+            var shipping = new ShippingInfo
             {
-                _logger.LogWarning("Failed to create shipment for order {orderId}", order.Id);
+                OrderId = order.Id,
+                TrackingNumber = trackingNumber,
+                Status = "Created"
+            };
+
+            _db.ShippingInfos.Add(shipping);
+
+            order.Status = OrderStatus.Completed;
+
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Shipment created Order {OrderId} Tracking {Tracking}",
+                order.Id, trackingNumber);
+
+            // Execute shipping hooks
+            foreach (var hook in _shippingHooks)
+            {
+                try
+                {
+                    await hook.OnShipmentCreatedAsync(order, trackingNumber);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Shipping hook failed for Order {OrderId}", order.Id);
+                }
             }
 
             return order;

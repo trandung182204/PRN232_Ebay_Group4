@@ -1,11 +1,12 @@
 
 using System;
-using Serilog;
 using EBayAPI.Configurations;
+using EBayAPI.Models.Hooks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace EBayCloneAPI
 {
@@ -67,6 +68,14 @@ namespace EBayCloneAPI
             builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, EBayCloneAPI.Services.PaymentService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
+
+            builder.Services.AddSingleton<PluginManager>();
+
+            builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();
+            builder.Services.AddSingleton<IShippingHook, VNPostShippingPlugin>();
+
+            builder.Services.AddScoped<IPaymentEventHook, TransactionLogHook>();
+            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
             // Hosted cleanup service
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();
