@@ -2,6 +2,7 @@
 using System;
 using EBayAPI.Configurations;
 using EBayAPI.Models.Hooks;
+using EBayCloneAPI.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -98,7 +99,12 @@ namespace EBayCloneAPI
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
-
+            // ===== RUN DATABASE SEEDER =====
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                DbSeeder.SeedAsync(db).Wait();
+            }
             app.UseSerilogRequestLogging();
 
             // Apply IP rate limiting only to API endpoints
