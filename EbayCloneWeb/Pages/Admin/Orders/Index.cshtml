@@ -55,7 +55,7 @@
                             <th>Date</th>
                             <th>Total</th>
                             <th>Status</th>
-                            <th width="320">Action</th>
+                            <th width="240">Action</th>
                         </tr>
                     </thead>
 
@@ -66,7 +66,10 @@
                             <tr>
 
                                 <td>
-                                    <span class="fw-bold">#@o.Id</span>
+                                    <a asp-page="/Admin/Orders/Detail" asp-route-id="@o.Id"
+                                           class="fw-bold text-decoration-none">
+                                        #@o.Id
+                                    </a>
                                 </td>
 
                                 <td>
@@ -79,6 +82,7 @@
                                     </span>
                                 </td>
 
+                                <!-- STATUS BADGE -->
                                 <td>
 
                                     @if (o.Status == "PendingPayment")
@@ -104,36 +108,38 @@
 
                                 </td>
 
+                                <!-- ACTION DROPDOWN -->
                                 <td>
 
-                                    @if (o.Status == "PendingPayment")
-                                    {
-                                        <button class="btn btn-sm btn-success me-1"
-                                                onclick="updateStatus(@o.Id,'Paid')">
-                                            Confirm Payment
-                                        </button>
-                                    }
+                                    <select class="form-select form-select-sm"                                       onchange="updateStatus(@o.Id,this.value)">
 
-                                    @if (o.Status == "Paid")
-                                    {
-                                        <button class="btn btn-sm btn-primary me-1"
-                                                onclick="updateStatus(@o.Id,'Shipping')">
-                                            Ship
-                                        </button>
-                                    }
+                                        @if (o.Status == "PendingPayment")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Paid">Paid</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Failed">Failed</option>
+                                        }
 
-                                    @if (o.Status == "Shipping")
-                                    {
-                                        <button class="btn btn-sm btn-info me-1"
-                                                onclick="updateStatus(@o.Id,'Delivered')">
-                                            Deliver
-                                        </button>
-                                    }
+                                        else if (o.Status == "Paid")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Shipping">Shipping</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        }
 
-                                    <button class="btn btn-sm btn-danger"
-                                            onclick="updateStatus(@o.Id,'Cancelled')">
-                                        Cancel
-                                    </button>
+                                        else if (o.Status == "Shipping")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Delivered">Delivered</option>
+                                        }
+
+                                        else
+                                        {
+                                            <option selected disabled>No actions</option>
+                                        }
+
+                                    </select>
 
                                 </td>
 
@@ -151,17 +157,38 @@
 
 </div>
 
+
 <script>
 
-async function updateStatus(id, status) {
+    async function updateStatus(id, status) {
+        if (!status) return;
 
-    await fetch(`http://localhost:5174/api/order/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(status)
-    });
+        const confirmChange = confirm("Change order status to " + status + "?");
 
-    location.reload();
-}
+        if (!confirmChange) {
+            location.reload();
+            return;
+        }
+
+        const res = await fetch(`http://localhost:5174/api/order/${id}/status`,
+            {
+                method: 'PUT',
+                headers:
+                {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(status)
+            });
+
+        if (res.ok) {
+            alert("Status updated successfully");
+            location.reload();
+        }
+        else {
+            const text = await res.text();
+            alert("Update failed: " + text);
+            location.reload();
+        }
+    }
 
 </script>

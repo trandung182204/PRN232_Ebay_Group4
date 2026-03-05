@@ -31,7 +31,38 @@ namespace EBayCloneAPI.Controllers
             if (order == null)
                 return NotFound();
 
-            return Ok(order);
+            var result = new
+            {
+                order.Id,
+                order.OrderDate,
+                order.TotalPrice,
+                Status = order.Status.ToString(),
+
+                OrderItems = order.OrderItems.Select(i => new
+                {
+                    i.Quantity,
+                    Product = new
+                    {
+                        i.Product.Title,
+                        i.Product.Price
+                    }
+                }),
+
+                Payments = order.Payments.Select(p => new
+                {
+                    p.Method,
+                    p.Amount,
+                    p.PaidAt
+                }),
+
+                ShippingInfos = order.ShippingInfos.Select(s => new
+                {
+                    s.TrackingNumber,
+                    s.Status
+                })
+            };
+
+            return Ok(result);
         }
         [HttpGet]
         public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10, OrderStatus? status = null)
