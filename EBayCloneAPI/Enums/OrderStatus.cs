@@ -5,7 +5,8 @@
         PendingPayment,
         Paid,
         Shipping,
-        Completed,
+        Delivered,
+        Failed,
         Cancelled
     }
 }

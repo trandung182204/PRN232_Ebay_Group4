@@ -1,0 +1,194 @@
+@page
+@model EbayCloneWeb.Pages.Admin.Orders.IndexModel
+@{
+    ViewData["Title"] = "Order Management";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-list-check text-primary"></i>
+            Order Management
+        </h2>
+    </div>
+
+    <!-- Filter -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="get" class="row g-2 align-items-center">
+
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option>PendingPayment</option>
+                        <option>Paid</option>
+                        <option>Shipping</option>
+                        <option>Delivered</option>
+                        <option>Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>OrderId</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th width="240">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var o in Model.Orders)
+                        {
+                            <tr>
+
+                                <td>
+                                    <a asp-page="/Admin/Orders/Detail" asp-route-id="@o.Id"
+                                           class="fw-bold text-decoration-none">
+                                        #@o.Id
+                                    </a>
+                                </td>
+
+                                <td>
+                                    @o.OrderDate.ToString("yyyy-MM-dd HH:mm")
+                                </td>
+
+                                <td>
+                                    <span class="text-danger fw-bold">
+                                        $@o.TotalPrice
+                                    </span>
+                                </td>
+
+                                <!-- STATUS BADGE -->
+                                <td>
+
+                                    @if (o.Status == "PendingPayment")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else if (o.Status == "Paid")
+                                    {
+                                        <span class="badge bg-info text-dark">Paid</span>
+                                    }
+                                    else if (o.Status == "Shipping")
+                                    {
+                                        <span class="badge bg-primary">Shipping</span>
+                                    }
+                                    else if (o.Status == "Delivered")
+                                    {
+                                        <span class="badge bg-success">Delivered</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    }
+
+                                </td>
+
+                                <!-- ACTION DROPDOWN -->
+                                <td>
+
+                                    <select class="form-select form-select-sm"                                       onchange="updateStatus(@o.Id,this.value)">
+
+                                        @if (o.Status == "PendingPayment")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Paid">Paid</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Failed">Failed</option>
+                                        }
+
+                                        else if (o.Status == "Paid")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Shipping">Shipping</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        }
+
+                                        else if (o.Status == "Shipping")
+                                        {
+                                            <option value="">Select action</option>
+                                            <option value="Delivered">Delivered</option>
+                                        }
+
+                                        else
+                                        {
+                                            <option selected disabled>No actions</option>
+                                        }
+
+                                    </select>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    async function updateStatus(id, status) {
+        if (!status) return;
+
+        const confirmChange = confirm("Change order status to " + status + "?");
+
+        if (!confirmChange) {
+            location.reload();
+            return;
+        }
+
+        const res = await fetch(`http://localhost:5174/api/order/${id}/status`,
+            {
+                method: 'PUT',
+                headers:
+                {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(status)
+            });
+
+        if (res.ok) {
+            alert("Status updated successfully");
+            location.reload();
+        }
+        else {
+            const text = await res.text();
+            alert("Update failed: " + text);
+            location.reload();
+        }
+    }
+
+</script>

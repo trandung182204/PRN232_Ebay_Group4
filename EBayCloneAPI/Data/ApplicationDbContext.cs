@@ -196,9 +196,15 @@ public partial class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__User__3213E83F073F4234");
         });
+        modelBuilder.Entity<OrderTable>()
+        .Property(o => o.Status)
+        .HasConversion<string>();
+
+        base.OnModelCreating(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
 }
