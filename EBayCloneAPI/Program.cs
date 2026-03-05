@@ -31,6 +31,11 @@ namespace EBayCloneAPI
 
             builder.Host.UseSerilog();
 
+
+            builder.Configuration
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -52,6 +57,9 @@ namespace EBayCloneAPI
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            // Memory cache used by rate limiting middleware
+            builder.Services.AddMemoryCache();
 
             builder.Services
                 .AddOptions<OrderCleanupSettings>()
@@ -86,6 +94,12 @@ namespace EBayCloneAPI
             var app = builder.Build();
 
             app.UseSerilogRequestLogging();
+
+            // Apply IP rate limiting only to API endpoints
+            app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), branch =>
+            {
+                branch.UseMiddleware<EBayCloneAPI.Middleware.IpRateLimitingMiddleware>();
+            });
 
             // Configure the HTTP request pipeline.
             // Enable Swagger UI in all environments for testing
