@@ -12,16 +12,50 @@ namespace EBayCloneAPI.Controllers
 
         public OrderController(IOrderService orders) => _orders = orders;
 
+        
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromForm] int productId, [FromForm] int quantity, [FromForm] string region, [FromForm] string paymentMethod, [FromForm] string authToken, [FromForm] string secureKey, [FromForm] int? userId)
+        public async Task<IActionResult> Create(
+    [FromForm] int productId,
+    [FromForm] int quantity,
+    [FromForm] string address,
+    [FromForm] string paymentMethod,
+    [FromForm] string region,
+    [FromForm] int? userId)
         {
             var sessionUser = HttpContext.Session.GetInt32("UserId");
             var uid = sessionUser ?? userId;
-            if (!uid.HasValue) return BadRequest("Login required");
 
-            var order = await _orders.CreateOrderAsync(uid.Value, productId, quantity, region, paymentMethod, authToken, secureKey);
-            // return a lightweight DTO to avoid JSON cycles from EF navigation properties
-            return Ok(new { id = order.Id, status = order.Status, total = order.TotalPrice });
+            if (!uid.HasValue)
+                return BadRequest("Login required");
+
+            var order = await _orders.CreateOrderAsync(
+                uid.Value,
+                productId,
+                quantity,
+                address,
+                paymentMethod,
+                region);
+
+            return Ok(new
+            {
+                id = order.Id,
+                status = order.Status,
+                total = order.TotalPrice
+            });
+        }
+        [HttpPost("{id}/pay")]
+        public async Task<IActionResult> Pay(
+    int id,
+    [FromForm] string paymentMethod,
+    [FromForm] string authToken,
+    [FromForm] string secureKey)
+        {
+            var success = await _orders.PayOrderAsync(id, paymentMethod, authToken, secureKey);
+
+            if (!success)
+                return BadRequest("Payment failed");
+
+            return Ok(new { message = "Payment successful" });
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderDetail(int id)
