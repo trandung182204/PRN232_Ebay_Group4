@@ -30,7 +30,13 @@ namespace EBayCloneAPI
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter()
+        );
+    });
             // CORS - allow frontend to call API during development
             builder.Services.AddCors(options =>
             {

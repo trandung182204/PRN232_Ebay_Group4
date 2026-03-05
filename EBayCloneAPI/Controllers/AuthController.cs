@@ -20,7 +20,14 @@ namespace EBayCloneAPI.Controllers
             if (user.Password != password) return BadRequest("Invalid credentials");
 
             HttpContext.Session.SetInt32("UserId", user.Id);
-            return Ok(new { user.Id, user.Email, user.Username });
+
+            return Ok(new
+            {
+                id = user.Id,
+                email = user.Email,
+                username = user.Username,
+                role = user.Role
+            });
         }
 
         [HttpPost("logout")]

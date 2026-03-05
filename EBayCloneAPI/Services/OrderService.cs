@@ -100,7 +100,7 @@ namespace EBayCloneAPI.Services
             if (shipSuccess)
             {
                 _db.ShippingInfos.Add(new ShippingInfo { OrderId = order.Id, TrackingNumber = tracking, Status = "Created" });
-                order.Status = OrderStatus.Completed;
+                order.Status = OrderStatus.Shipping;
                 await _db.SaveChangesAsync();
             }
             else
@@ -160,5 +160,78 @@ namespace EBayCloneAPI.Services
                 _ => 10,
             };
         }
+        public async Task<OrderTable?> GetOrderDetailAsync(int id)
+        {
+            return await _db.OrderTables
+                .Include(o => o.OrderItems)
+                .ThenInclude(i => i.Product)
+                .Include(o => o.Payments)
+                .Include(o => o.ShippingInfos)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+        public async Task<object> GetOrdersAsync(int page, int pageSize, OrderStatus? status)
+        {
+            var query = _db.OrderTables.AsQueryable();
+
+            if (status != null)
+                query = query.Where(o => o.Status == status);
+
+            var total = await query.CountAsync();
+
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(o => new
+                {
+                    o.Id,
+                    o.OrderDate,
+                    o.TotalPrice,
+                    o.Status,
+                    Buyer = o.BuyerId
+                })
+                .ToListAsync();
+
+            return new
+            {
+                page,
+                pageSize,
+                total,
+                data = orders
+            };
+        }
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus newStatus)
+        {
+            var order = await _db.OrderTables.FindAsync(orderId);
+
+            if (order == null)
+                return false;
+
+            var current = order.Status;
+
+            bool valid = current switch
+            {
+                OrderStatus.PendingPayment => newStatus == OrderStatus.Paid
+                                              || newStatus == OrderStatus.Cancelled
+                                              || newStatus == OrderStatus.Failed,
+
+                OrderStatus.Paid => newStatus == OrderStatus.Shipping
+                                    || newStatus == OrderStatus.Cancelled,
+
+                OrderStatus.Shipping => newStatus == OrderStatus.Delivered,
+
+                _ => false
+            };
+
+            if (!valid)
+                throw new Exception($"Invalid status change {current} → {newStatus}");
+
+            order.Status = newStatus;
+
+            await _db.SaveChangesAsync();
+
+            return true;
+        }
     }
+
 }

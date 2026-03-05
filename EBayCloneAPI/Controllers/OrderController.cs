@@ -1,7 +1,7 @@
 using EBayCloneAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-
+using EBayAPI.Enums;
 namespace EBayCloneAPI.Controllers
 {
     [ApiController]
@@ -23,5 +23,33 @@ namespace EBayCloneAPI.Controllers
             // return a lightweight DTO to avoid JSON cycles from EF navigation properties
             return Ok(new { id = order.Id, status = order.Status, total = order.TotalPrice });
         }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrderDetail(int id)
+        {
+            var order = await _orders.GetOrderDetailAsync(id);
+
+            if (order == null)
+                return NotFound();
+
+            return Ok(order);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10, OrderStatus? status = null)
+        {
+            var result = await _orders.GetOrdersAsync(page, pageSize, status);
+
+            return Ok(result);
+        }
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderStatus status)
+        {
+            var updated = await _orders.UpdateOrderStatusAsync(id, status);
+
+            if (!updated)
+                return NotFound();
+
+            return Ok(new { message = "Status updated" });
+        }
     }
+
 }
