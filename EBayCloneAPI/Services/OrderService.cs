@@ -156,22 +156,18 @@ namespace EBayCloneAPI.Services
             var cutoff = DateTime.UtcNow.AddMinutes(-_settings.PaymentTimeoutMinutes);
 
             var candidates = await _db.OrderTables
-                .Join(_db.Payments,
-                    o => o.Id,
-                    p => p.OrderId,
-                    (o, p) => new
-                    {
-                        o.Id,
-                        o.BuyerId,
-                        o.Status,
-                        o.OrderDate,
-                        p.Method
-                    })
-                .Where(x =>
-                    x.Status == OrderStatus.PendingPayment &&
-                    x.OrderDate != null &&
-                    x.OrderDate <= cutoff &&
-                    x.Method != "COD") // ❗ chỉ cancel online payments
+                .Where(o =>
+                    o.Status == OrderStatus.PendingPayment &&
+                    o.OrderDate != null &&
+                    o.OrderDate <= cutoff &&
+                    _db.Payments.Any(p =>
+                        p.OrderId == o.Id &&
+                        p.Method != "COD"))
+                .Select(o => new
+                {
+                    o.Id,
+                    o.BuyerId
+                })
                 .ToListAsync();
 
             int cancelled = 0;

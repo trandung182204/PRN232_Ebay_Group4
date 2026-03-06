@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 
 namespace EBayCloneAPI
 {
@@ -17,17 +18,20 @@ namespace EBayCloneAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure Serilog early so startup logs go to file as well
+            var runId = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}-{Environment.ProcessId}";
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(builder.Configuration)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .Enrich.WithThreadId()
                 .WriteTo.Console()
-                .WriteTo.File("logs/ebayclone_.txt",
-                    rollingInterval: RollingInterval.Day,
-                    fileSizeLimitBytes: 10_000_000,
-                    rollOnFileSizeLimit: true,
-                    retainedFileCountLimit: 7)
+                // Use a unique filename per run (timestamp + process id)
+                .WriteTo.File(
+                    path: $"logs/ebayclone-{runId}.txt",
+                    rollingInterval: RollingInterval.Infinite,
+                    fileSizeLimitBytes: null,
+                    retainedFileCountLimit: null,
+                    shared: true)
                 .CreateLogger();
 
             builder.Host.UseSerilog();
