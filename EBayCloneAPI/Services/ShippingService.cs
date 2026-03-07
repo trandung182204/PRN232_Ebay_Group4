@@ -1,16 +1,28 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using EBayAPI.Models.Hooks;
+using Microsoft.Extensions.Logging;
 
 namespace EBayCloneAPI.Services
 {
     public class ShippingService : IShippingService
     {
         private readonly ILogger<ShippingService> _logger;
-        public ShippingService(ILogger<ShippingService> logger) => _logger = logger;
+        private readonly IEnumerable<IShippingEventHook> _shippingHooks;
 
-        // Simulate external API with retry
-        public async Task<(bool success, string trackingCode)> CreateShipmentAsync(int orderId, string region, string authToken, string secureKey)
+        public ShippingService(
+            ILogger<ShippingService> logger,
+            IEnumerable<IShippingEventHook> shippingHooks)
+        {
+            _logger = logger;
+            _shippingHooks = shippingHooks;
+        }
+
+        public async Task<(bool success, string trackingCode)> CreateShipmentAsync(
+            int orderId,
+            string region,
+            string authToken,
+            string secureKey)
         {
             if (string.IsNullOrEmpty(authToken) || secureKey != "SHIP_SECURE_456")
             {
@@ -19,18 +31,30 @@ namespace EBayCloneAPI.Services
             }
 
             int attempts = 0;
+
             while (attempts < 3)
             {
                 attempts++;
+
                 try
                 {
-                    // Simulate possible transient failure
                     var rnd = new Random();
+
                     if (rnd.NextDouble() < 0.7)
                     {
-                        // success
-                        var code = $"TRK-{Guid.NewGuid().ToString().Substring(0,8)}";
-                        _logger.LogInformation("Created shipment {code} for order {orderId}", code, orderId);
+                        var code = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8)}";
+
+                        _logger.LogInformation(
+                            "Created shipment {code} for order {orderId}",
+                            code,
+                            orderId);
+
+                        // Trigger shipping hooks
+                        foreach (var hook in _shippingHooks)
+                        {
+                            await hook.OnShipmentCreated(orderId, code);
+                        }
+
                         return (true, code);
                     }
                     else
@@ -40,7 +64,12 @@ namespace EBayCloneAPI.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Attempt {attempt} failed creating shipment for order {orderId}", attempts, orderId);
+                    _logger.LogWarning(
+                        ex,
+                        "Attempt {attempt} failed creating shipment for order {orderId}",
+                        attempts,
+                        orderId);
+
                     await Task.Delay(500 * attempts);
                 }
             }
@@ -50,9 +79,10 @@ namespace EBayCloneAPI.Services
 
         public Task<(bool success, string status)> GetShipmentStatusAsync(string trackingCode)
         {
-            // Simulated progression
             var rnd = new Random();
+
             var value = rnd.Next(0, 3);
+
             var status = value switch
             {
                 0 => "Pending",
@@ -60,6 +90,7 @@ namespace EBayCloneAPI.Services
                 2 => "Delivered",
                 _ => "Pending",
             };
+
             return Task.FromResult((true, status));
         }
     }

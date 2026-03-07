@@ -4,6 +4,7 @@ namespace EBayAPI.Models.Hooks
 {
     public interface IPaymentEventHook
     {
-        Task OnPaymentSuccess(OrderTable order, Payment payment, string transactionId);
+        Task OnPaymentSuccess(OrderTable order);
+        Task OnPaymentFailed(OrderTable order);
     }
 }
