@@ -33,6 +33,9 @@ public partial class Payment
     [Column("paidAt", TypeName = "datetime")]
     public DateTime? PaidAt { get; set; }
 
+    // PayPal Order ID
+    public string? TransactionId { get; set; }
+    
     [ForeignKey("OrderId")]
     [InverseProperty("Payments")]
     public virtual OrderTable? Order { get; set; }

@@ -1,0 +1,33 @@
+
+@page
+@model EbayWeb.Pages.Payment.CheckoutModel
+
+<h2>Checkout</h2>
+
+<div>
+    <p>Order ID: @Model.OrderId</p>
+    <p>Total Price: $@Model.TotalPrice</p>
+</div>
+
+<button id="paypalBtn">Pay with PayPal</button>
+
+<script>
+document.getElementById("paypalBtn").addEventListener("click", async () => {
+
+    const response = await fetch("http://localhost:5174/api/payments", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            orderId: @Model.OrderId,
+            userId: @Model.UserId,
+            method: "PAYPAL"
+        })
+    });
+
+    const data = await response.json();
+
+    window.location.href = data.approveUrl;
+});
+</script>

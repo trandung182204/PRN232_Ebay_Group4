@@ -1,6 +1,8 @@
 
 using System;
 using EBayAPI.Configurations;
+using EBayAPI.Events;
+using EBayAPI.Events.Handlers;
 using EBayAPI.Models.Hooks;
 using EBayCloneAPI.Data;
 using Microsoft.AspNetCore.Builder;
@@ -78,6 +80,13 @@ namespace EBayCloneAPI
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            // Email settings (bound from appsettings "EmailSettings")
+            builder.Services
+                .AddOptions<EmailSettings>()
+                .Bind(builder.Configuration.GetSection("EmailSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             // Repositories
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IUserRepository, EBayCloneAPI.Repositories.UserRepository>();
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IProductRepository, EBayCloneAPI.Repositories.ProductRepository>();
@@ -88,6 +97,13 @@ namespace EBayCloneAPI
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
 
+            // Payment Providers
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.CodPaymentProvider>();
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.PaypalPaymentProvider>();
+
+            // PayPal HTTP client
+            builder.Services.AddHttpClient<EBayAPI.Services.PaypalService>();
+
             builder.Services.AddSingleton<PluginManager>();
 
             builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();
@@ -96,11 +112,32 @@ namespace EBayCloneAPI
             builder.Services.AddScoped<IPaymentEventHook, TransactionLogHook>();
             builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
+            // ── KAN-18: Event Bus (singleton; uses IServiceScopeFactory internally) ──
+            builder.Services.AddSingleton<IEventBus, EventBus>();
+
+            // ── Order Created: confirmation email handler (fires on order placement) ──
+            builder.Services.AddScoped<IEventHandler<OrderCreatedEvent>, OrderCreatedEmailHandler>();
+
+            // ── KAN-16: Payment confirmation email handler ──
+            builder.Services.AddScoped<IEventHandler<OrderPaidEvent>, OrderPaidEmailHandler>();
+
+            // ── KAN-17: Order status-change email handler ──
+            builder.Services.AddScoped<IEventHandler<OrderStatusChangedEvent>, OrderStatusChangedEmailHandler>();
+
             // Hosted cleanup service
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title   = "eBayClone API",
+                    Version = "v1",
+                    Description = "PRN232 Group 4 — eBay Clone REST API"
+                });
+                c.EnableAnnotations();
+            });
 
             var app = builder.Build();
             // ===== RUN DATABASE SEEDER =====

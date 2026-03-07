@@ -1,120 +1,188 @@
 @page
 @model EbayCloneWeb.Pages.Order.CreateModel
 @{
-    ViewData["Title"] = "Checkout";
+    ViewData["Title"] = "Buy — " + (Model.Product?.Title ?? "Product");
 }
 
-<div class="container py-4">
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            @if (Model.ImagesList != null && Model.ImagesList.Count > 0)
+<div class="container-fluid px-4 py-3" style="max-width:1400px;margin:0 auto;">
+
+    <!-- Breadcrumb -->
+    <nav class="eb-breadcrumb">
+        <a asp-page="/Index">Home</a>
+        <span class="sep">›</span>
+        <a asp-page="/Index">All listings</a>
+        <span class="sep">›</span>
+        <span>@Model.Product?.Title</span>
+    </nav>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Images -->
+        <div class="col-lg-5">
+            <div class="eb-product-card p-3">
+                @if (Model.ImagesList != null && Model.ImagesList.Count > 0)
+                {
+                    <div id="productCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner rounded-3 overflow-hidden border" style="background:#fff;min-height:340px;">
+                            @for (int i = 0; i < Model.ImagesList.Count; i++)
                             {
-                                <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
-                                    <div class="carousel-inner">
-                                        @for (int i = 0; i < Model.ImagesList.Count; i++)
-                                        {
-                                            var css = i == 0 ? "carousel-item active" : "carousel-item";
-                                            <div class="@css">
-                                                <img src="@Model.ImagesList[i]" class="d-block w-100" style="object-fit:contain;height:400px;" />
-                                            </div>
-                                        }
-                                    </div>
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Previous</span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Next</span>
-                                    </button>
-                                </div>
-                                <div class="d-flex gap-2 mt-2">
-                                    @foreach (var img in Model.ImagesList)
-                                    {
-                                        <img src="@img" class="img-thumbnail thumb-img" style="width:80px;height:80px;object-fit:cover;cursor:pointer" data-src="@img" />
-                                    }
+                                var css = i == 0 ? "carousel-item active" : "carousel-item";
+                                <div class="@css">
+                                    <img src="@Model.ImagesList[i]"
+                                         class="d-block mx-auto"
+                                         style="object-fit:contain;height:360px;max-width:100%;" />
                                 </div>
                             }
-                            else
-                            {
-                                <img src="/images/placeholder.png" class="img-fluid" style="height:400px;object-fit:contain" />
-                            }
                         </div>
-
-                        <div class="col-md-6">
-
-                            <h2>@Model.Product?.Title</h2>
-                            <p class="text-muted">@Model.Product?.Description</p>
-                            <h4 class="text-danger">$@string.Format("{0:0.00}", Model.Product?.Price ?? 0)</h4>
-
-                            <div class="mb-3">
-                                <span class="badge bg-success">In stock</span>
-                                <span class="ms-2">? @Model.AvgRating.ToString("0.0")</span>
-                            </div>
-
-                            <form method="post">
-                                <input type="hidden" asp-for="ProductId" />
-                                <div class="row g-2 mb-3">
-                                    <div class="col-4">
-                                        <label class="form-label small">Quantity</label>
-                                        <input asp-for="Quantity" class="form-control" />
-                                    </div>
-                                    <div class="col-8">
-                                        <label class="form-label small">Region</label>
-                                        <select asp-for="Region" class="form-select">
-                                            <option value="north">North</option>
-                                            <option value="central">Central</option>
-                                            <option value="south">South</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small">Shipping address</label>
-                                    <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter shipping address"></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small">Payment Method</label>
-                                    <select asp-for="PaymentMethod" class="form-select">
-                                        <option>PayPal</option>
-                                        <option>COD</option>
-                                    </select>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-primary btn-lg">Place Order</button>
-                                    <a asp-page="/Index" class="btn btn-outline-secondary">Continue shopping</a>
-                                </div>
-                            </form>
-                        </div>
+                        @if (Model.ImagesList.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        }
                     </div>
-                </div>
+                    <div class="eb-thumb-strip">
+                        @foreach (var img in Model.ImagesList)
+                        {
+                            <img src="@img" class="eb-thumb thumb-img" data-src="@img" alt="thumbnail" />
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-image" style="font-size:4rem;opacity:.3"></i>
+                        <p class="mt-2 small">No image available</p>
+                    </div>
+                }
             </div>
         </div>
 
+        <!-- MIDDLE: Product info + order form -->
         <div class="col-lg-4">
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Seller</h5>
-                    <p class="small text-muted mb-1">@Model.SellerUsername</p>
-                    <p class="small text-muted">@Model.SellerEmail</p>
-                    <a class="btn btn-outline-primary btn-sm mt-2">View store</a>
+            <div class="eb-product-card">
+
+                <!-- Title & condition -->
+                <div class="eb-product-title">@Model.Product?.Title</div>
+                <div class="eb-product-condition">
+                    Condition: <strong>New</strong>
+                </div>
+
+                <!-- Price -->
+                <div class="eb-product-price">
+                    US $@string.Format("{0:0.00}", Model.Product?.Price ?? 0)
+                </div>
+                <div class="eb-product-price-sub">Approximately listed price. Free returns.</div>
+
+                <!-- Stock & rating -->
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                    <span class="eb-stock-badge">
+                        <i class="bi bi-check-circle-fill"></i> In stock
+                    </span>
+                    <span class="eb-rating-badge">
+                        <i class="bi bi-star-fill"></i>
+                        @Model.AvgRating.ToString("0.0") / 5.0
+                    </span>
+                </div>
+
+                <!-- Description -->
+                @if (!string.IsNullOrWhiteSpace(Model.Product?.Description))
+                {
+                    <p class="text-muted small mb-3" style="line-height:1.6">@Model.Product.Description</p>
+                }
+
+                <!-- Order form -->
+                <div class="eb-form-section">
+                    <form method="post">
+                        <input type="hidden" asp-for="ProductId" />
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-5">
+                                <label class="eb-form-label">Quantity</label>
+                                <input asp-for="Quantity" class="form-control eb-form-control" min="1" type="number" />
+                            </div>
+                            <div class="col-7">
+                                <label class="eb-form-label">Region</label>
+                                <select asp-for="Region" class="form-select eb-form-control">
+                                    <option value="north">North</option>
+                                    <option value="central">Central</option>
+                                    <option value="south">South</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="eb-form-label">Shipping address</label>
+                            <textarea asp-for="Address" class="form-control eb-form-control" rows="3"
+                                      placeholder="Enter full shipping address"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="eb-form-label">Payment method</label>
+                            <select asp-for="PaymentMethod" class="form-select eb-form-control">
+                                <option value="PAYPAL">PayPal</option>
+                                <option value="COD">COD</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="eb-btn-order">
+                            <i class="bi bi-lightning-fill"></i> Buy It Now
+                        </button>
+                        <a asp-page="/Index" class="eb-btn-outline">Continue shopping</a>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Seller & shipping sidebar -->
+        <div class="col-lg-3">
+
+            <!-- Seller card -->
+            <div class="eb-sidebar-card">
+                <h6><i class="bi bi-shop me-2 text-eb-blue"></i>Seller information</h6>
+                <div class="eb-seller-name">@Model.SellerUsername</div>
+                <div class="eb-seller-meta"><i class="bi bi-envelope me-1"></i>@Model.SellerEmail</div>
+                <div class="eb-seller-meta"><i class="bi bi-star-fill me-1" style="color:#F5AF02"></i> Top Rated Seller</div>
+                <div class="mt-3">
+                    <a class="btn btn-sm btn-outline-primary w-100 rounded-pill">
+                        <i class="bi bi-shop"></i> View store
+                    </a>
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-body small text-muted">
-                    <h6>Shipping</h6>
-                    <p>Calculated at checkout. Estimated delivery 3-7 business days.</p>
-                    <h6>Returns</h6>
-                    <p>30-day return policy.</p>
+            <!-- Shipping info -->
+            <div class="eb-sidebar-card">
+                <h6><i class="bi bi-truck me-2 text-eb-blue"></i>Shipping</h6>
+                <div class="eb-info-row">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Calculated at checkout. Estimated delivery <strong>3–7 business days</strong>.</span>
+                </div>
+                <div class="eb-info-row">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Ships within Vietnam.</span>
                 </div>
             </div>
+
+            <!-- Returns info -->
+            <div class="eb-sidebar-card">
+                <h6><i class="bi bi-arrow-return-left me-2 text-eb-blue"></i>Returns</h6>
+                <div class="eb-info-row">
+                    <i class="bi bi-calendar-check"></i>
+                    <span><strong>30-day</strong> return policy. Buyer pays return shipping.</span>
+                </div>
+                <div class="eb-info-row">
+                    <i class="bi bi-shield-check"></i>
+                    <span>eBayClone Money Back Guarantee — get the item you ordered or your money back.</span>
+                </div>
+            </div>
+
         </div>
     </div>
+
 </div>

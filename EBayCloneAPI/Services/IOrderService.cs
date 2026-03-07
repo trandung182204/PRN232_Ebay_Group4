@@ -11,9 +11,9 @@ namespace EBayCloneAPI.Services
     int userId,
     int productId,
     int quantity,
-    string addressText,
-    string paymentMethod,
-    string region
+    string? addressText,
+    string? paymentMethod,
+    string? region
 );
 
         // User thanh toán

@@ -1,0 +1,19 @@
+@page
+@model EbayWeb.Pages.Payment.PaymentFailed
+@{
+    ViewData["Title"] = "Payment Failed";
+}
+
+<div class="container mt-5 text-center">
+    <h2 class="text-danger">&#10060; Payment Failed</h2>
+
+    <p class="mt-3 fs-5">
+        @Model.Message
+    </p>
+
+    <div class="mt-4 d-flex justify-content-center gap-3">
+        <a href="/" class="btn btn-primary btn-lg">
+            Continue Shopping
+        </a>
+    </div>
+</div>

@@ -2,41 +2,55 @@
 @model EbayCloneWeb.Pages.Account.LoginModel
 @{
     ViewData["Title"] = "Sign in";
+    Layout = "_Layout";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">    
-        <div class="col-lg-5 col-md-7">
-            <div class="card shadow border-0">
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <h3 class="mb-0">Welcome back</h3>
-                        <p class="text-muted small">Sign in to continue to EbayClone</p>
-                    </div>
+<div class="eb-login-page">
+    <div class="eb-login-card">
 
-                    <form method="post">
-                        <input type="hidden" asp-for="ReturnUrl" />
+        <!-- Logo -->
+        <a class="eb-login-logo" asp-page="/Index">
+            <span class="eb-e">e</span><span class="eb-b">b</span><span class="eb-a">a</span><span class="eb-y">y</span><span style="color:#767676;font-size:0.85rem;font-weight:400;font-style:normal;">Clone</span>
+        </a>
 
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label small">Email</label>
-                            <input asp-for="Email" class="form-control form-control-lg" placeholder="you@example.com" />
-                        </div>
+        <div class="eb-login-title">Hello, sign in</div>
+        <div class="eb-login-sub">Access your eBayClone account</div>
 
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label small">Password</label>
-                            <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="Enter your password" />
-                        </div>
+        <form method="post">
+            <input type="hidden" asp-for="ReturnUrl" />
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Sign in</button>
-                        </div>
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <a asp-page="/Index">Back to home</a>
-                    </div>
-                </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="eb-login-label">Email address</label>
+                <input asp-for="Email"
+                       class="eb-login-input"
+                       type="email"
+                       placeholder="you@example.com"
+                       autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
+
+            <div class="mb-4">
+                <label asp-for="Password" class="eb-login-label">Password</label>
+                <input asp-for="Password"
+                       type="password"
+                       class="eb-login-input"
+                       placeholder="Enter your password"
+                       autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="eb-btn-login">
+                Sign in
+            </button>
+        </form>
+
+        <div class="eb-login-divider mt-4">or</div>
+
+        <div class="text-center mt-3">
+            <a asp-page="/Index" class="text-muted small text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>Continue as guest
+            </a>
         </div>
+
     </div>
 </div>

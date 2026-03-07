@@ -1,74 +1,173 @@
-﻿@page
+@page
 @model IndexModel
 @{
     ViewData["Title"] = "Home";
 }
 
-<div class="hero bg-primary text-white py-4 mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h2 class="mb-0">EbayClone</h2>
-        <form class="d-flex" method="get">
-            <input id="heroQ" class="form-control me-2" name="q" placeholder="Search for products, brands and more" value="@Model.Q" />
-            <button class="btn btn-dark">Search</button>
-        </form>
-    </div>
- </div>
+<div class="container-fluid px-4 pt-4" style="max-width:1400px;margin:0 auto;">
 
-<div class="container">
-    <div class="d-flex align-items-center mb-3">
-        <h3 class="me-3"><span class="text-danger">🔥</span> Featured Products</h3>
-        <small class="text-muted">Best picks for you</small>
-    </div>
+    <!-- ====================================================
+         PROMOTIONAL BANNER — Slideable Carousel
+    ==================================================== -->
+    <div id="heroBannerCarousel" class="carousel slide eb-hero-carousel" data-bs-ride="carousel" data-bs-interval="5000">
 
-    <form id="filterForm" class="row g-2 align-items-center mb-4" method="get">
-        <div class="col-md-4">
-            <input id="q" name="q" value="@Model.Q" class="form-control" placeholder="Search..." />
+        <!-- Dot indicators -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroBannerCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+            <button type="button" data-bs-target="#heroBannerCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroBannerCarousel" data-bs-slide-to="2"></button>
         </div>
-        <div class="col-md-2">
-            <select id="categoryId" name="categoryId" class="form-select">
-                <option value="">All Categories</option>
+
+        <div class="carousel-inner">
+
+            <!-- ── Slide 1: Luxury & Fashion (Purple) ── -->
+            <div class="carousel-item active">
+                <div class="eb-hero-banner eb-slide-purple">
+                    <div class="eb-hero-text">
+                        <div class="eb-hero-title">Good taste is timeless</div>
+                        <div class="eb-hero-sub">Create iconic looks with exclusive deals on luxury watches, jewellery &amp; bags.</div>
+                        <a href="#productGridRow" class="eb-hero-cta">Explore now</a>
+                    </div>
+                    <div class="eb-hero-images">
+                        <div class="eb-hero-img-card"><i class="bi bi-smartwatch"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-gem"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-handbag-fill"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-bag-heart-fill"></i></div>
+                    </div>
+                    <div class="eb-hero-badge">
+                        <div class="eb-hero-badge-label">Up to</div>
+                        <div class="eb-hero-badge-amount">$140<sup>*</sup></div>
+                        <div class="eb-hero-badge-off">OFF</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Slide 2: Tech & Electronics (Blue) ── -->
+            <div class="carousel-item">
+                <div class="eb-hero-banner eb-slide-blue">
+                    <div class="eb-hero-text">
+                        <div class="eb-hero-title">Technology at your fingertips</div>
+                        <div class="eb-hero-sub">Top deals on laptops, phones, headphones and the latest gadgets.</div>
+                        <a href="#productGridRow" class="eb-hero-cta">Shop Tech</a>
+                    </div>
+                    <div class="eb-hero-images">
+                        <div class="eb-hero-img-card"><i class="bi bi-laptop"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-phone-fill"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-headphones"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-controller"></i></div>
+                    </div>
+                    <div class="eb-hero-badge">
+                        <div class="eb-hero-badge-label">Up to</div>
+                        <div class="eb-hero-badge-amount">$80<sup>*</sup></div>
+                        <div class="eb-hero-badge-off">OFF</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Slide 3: Home & Living (Teal) ── -->
+            <div class="carousel-item">
+                <div class="eb-hero-banner eb-slide-teal">
+                    <div class="eb-hero-text">
+                        <div class="eb-hero-title">Home &amp; Living essentials</div>
+                        <div class="eb-hero-sub">Everything you need to make your home more beautiful and comfortable.</div>
+                        <a href="#productGridRow" class="eb-hero-cta">Shop Home</a>
+                    </div>
+                    <div class="eb-hero-images">
+                        <div class="eb-hero-img-card"><i class="bi bi-house-heart-fill"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-lamp-fill"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-flower1"></i></div>
+                        <div class="eb-hero-img-card"><i class="bi bi-cup-hot-fill"></i></div>
+                    </div>
+                    <div class="eb-hero-badge">
+                        <div class="eb-hero-badge-label">Up to</div>
+                        <div class="eb-hero-badge-amount">$60<sup>*</sup></div>
+                        <div class="eb-hero-badge-off">OFF</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /carousel-inner -->
+
+        <!-- Prev / Next arrows (appear on hover) -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+
+    </div><!-- /heroBannerCarousel -->
+
+    <!-- ====================================================
+         FILTER / SORT BAR
+    ==================================================== -->
+    <form id="filterForm" method="get">
+        <!-- Hidden inputs — values set by navbar search + JS -->
+        <input type="hidden" id="q"          name="q"          value="@Model.Q" />
+        <input type="hidden" id="categoryId" name="categoryId" />
+        <input type="hidden" id="orderBy"    name="orderBy" />
+        <input type="hidden" id="sortDir"    name="sortDir" />
+
+        <div class="eb-filter-bar">
+
+            <span class="eb-filter-label">Sort:</span>
+
+            <!-- Combined sort select — fixes the separate Low/High confusion -->
+            <select id="sortSelect" class="eb-filter-select">
+                <option value="">Best Match</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="title_asc">Title: A → Z</option>
+                <option value="title_desc">Title: Z → A</option>
             </select>
-        </div>
-        <div class="col-md-2">
-            <select id="orderBy" name="orderBy" class="form-select">
-                <option value="">Order by</option>
-                <option value="price">Price</option>
-                <option value="title">Title</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select id="sortDir" name="sortDir" class="form-select">
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-            </select>
-        </div>
-        <div class="col-md-1">
-            <select id="pageSize" name="pageSize" class="form-select">
+
+            <div class="eb-filter-divider"></div>
+
+            <span class="eb-filter-label">Items per page:</span>
+
+            <select id="pageSize" name="pageSize" class="eb-filter-select" style="min-width:90px;">
                 <option value="8">8</option>
                 <option value="16" selected>16</option>
                 <option value="32">32</option>
+                <option value="48">48</option>
             </select>
-        </div>
-        <div class="col-md-1">
-            <button type="button" id="clearFilters" class="btn btn-outline-secondary w-100">Clear</button>
+
+            <button type="button" id="clearFilters" class="eb-clear-btn ms-auto">
+                <i class="bi bi-x-circle me-1"></i>Clear
+            </button>
         </div>
     </form>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="text-muted">Showing @Model.Products.Count() of @Model.TotalItems items</div>
-        <div></div>
+    <!-- ====================================================
+         SECTION HEADER
+    ==================================================== -->
+    <div class="eb-section-header mb-3">
+        <span class="eb-section-title">
+            @if (!string.IsNullOrEmpty(Model.Q))
+            {
+                <text>Results for "<em>@Model.Q</em>"</text>
+            }
+            else
+            {
+                <text>All listings</text>
+            }
+        </span>
+        <span class="eb-results-count">@Model.TotalItems results</span>
     </div>
 
-    <div id="productGridRow" class="row">
+    <!-- ====================================================
+         PRODUCT GRID
+    ==================================================== -->
+    <div id="productGridRow" class="row g-3">
         @foreach (var p in Model.Products)
         {
             var img = "/images/placeholder.png";
             if (p.ValueKind == System.Text.Json.JsonValueKind.Object && p.TryGetProperty("images", out var imagesProp))
             {
                 if (imagesProp.ValueKind == System.Text.Json.JsonValueKind.String)
-                {
                     img = imagesProp.GetString() ?? img;
-                }
                 else if (imagesProp.ValueKind == System.Text.Json.JsonValueKind.Array && imagesProp.GetArrayLength() > 0)
                 {
                     var first = imagesProp[0];
@@ -77,63 +176,60 @@
                 }
             }
 
-            var title = p.TryGetProperty("title", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String ? t.GetString() : "";
-            var desc = p.TryGetProperty("description", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String ? d.GetString() : "";
-            var price = p.TryGetProperty("price", out var pr) && (pr.ValueKind == System.Text.Json.JsonValueKind.Number) ? pr.GetDecimal() : 0;
-            var id = p.TryGetProperty("id", out var pid) && pid.ValueKind == System.Text.Json.JsonValueKind.Number ? pid.GetInt32() : 0;
+            var title = p.TryGetProperty("title", out var t)  && t.ValueKind  == System.Text.Json.JsonValueKind.String ? t.GetString() : "";
+            var price = p.TryGetProperty("price", out var pr) && pr.ValueKind == System.Text.Json.JsonValueKind.Number  ? pr.GetDecimal() : 0;
+            var id    = p.TryGetProperty("id",    out var pid) && pid.ValueKind == System.Text.Json.JsonValueKind.Number ? pid.GetInt32() : 0;
 
-            // seller extraction
-            string sellerLine = "Seller: unknown";
+            string sellerLine = "unknown";
             if (p.ValueKind == System.Text.Json.JsonValueKind.Object)
             {
                 if (p.TryGetProperty("seller", out var sellerProp) && sellerProp.ValueKind == System.Text.Json.JsonValueKind.Object)
                 {
-                    if (sellerProp.TryGetProperty("email", out var sem) && sem.ValueKind == System.Text.Json.JsonValueKind.String)
-                        sellerLine = $"Seller: {sem.GetString()}";
-                    else if (sellerProp.TryGetProperty("username", out var sun) && sun.ValueKind == System.Text.Json.JsonValueKind.String)
-                        sellerLine = $"Seller: {sun.GetString()}";
-                }
-                else if (p.TryGetProperty("sellerId", out var sid) && sid.ValueKind == System.Text.Json.JsonValueKind.Number)
-                {
-                    sellerLine = $"Seller: #{sid.GetInt32()}";
+                    if (sellerProp.TryGetProperty("username", out var sun) && sun.ValueKind == System.Text.Json.JsonValueKind.String)
+                        sellerLine = sun.GetString() ?? sellerLine;
+                    else if (sellerProp.TryGetProperty("email", out var sem) && sem.ValueKind == System.Text.Json.JsonValueKind.String)
+                        sellerLine = sem.GetString() ?? sellerLine;
                 }
             }
 
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card h-100 border rounded shadow-sm">
-                    <div class="ratio ratio-4x3">
-                        <img src="@img" class="card-img-top rounded-top" alt="@title" style="object-fit:cover" />
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="eb-card">
+                    <div class="eb-card-img-wrap">
+                        <img src="@img" alt="@title" loading="lazy" />
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">@title</h5>
-                        <p class="text-muted small mb-2">@desc</p>
-
-                        <div class="d-flex align-items-center mb-2">
-                            <h5 class="text-danger mb-0 me-3">$@string.Format("{0:0.00}", price)</h5>
-                            <span class="badge bg-success ms-auto">⭐ 4.0</span>
-                        </div>
-
-                        <div class="mb-3 text-muted small"><i class="bi bi-person-fill"></i> @sellerLine</div>
-
-                        <div class="mt-auto">
-                            <a class="btn btn-primary w-100" asp-page="/Order/Create" asp-route-id="@id"><i class="bi bi-cart-fill"></i> Buy Now</a>
-                        </div>
+                    <div class="eb-card-body">
+                        <div class="eb-card-title">@title</div>
+                        <div class="eb-card-price">US $@string.Format("{0:0.00}", price)</div>
+                        <div class="eb-card-price-alt">or Best Offer</div>
+                        <div class="eb-card-shipping"><i class="bi bi-truck"></i> Free shipping</div>
+                        <div class="eb-card-seller"><i class="bi bi-person-fill"></i> @sellerLine</div>
+                        <a class="eb-btn-buy" asp-page="/Order/Create" asp-route-id="@id">
+                            <i class="bi bi-cart-fill"></i> Buy It Now
+                        </a>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="d-flex justify-content-center mt-4">
+    <!-- ====================================================
+         PAGINATION
+    ==================================================== -->
+    <div class="d-flex justify-content-center mt-5 pb-4">
         <nav>
-            <ul id="pagination" class="pagination">
-                @{ var totalPages = (int)System.Math.Ceiling(Model.TotalItems / (double)Model.PageSize); }
+            <ul id="pagination" class="pagination eb-pagination">
+                @{
+                    var totalPages = (int)System.Math.Ceiling(Model.TotalItems / (double)Model.PageSize);
+                }
                 @for (int i = 1; i <= totalPages; i++)
                 {
                     var css = i == Model.Page ? "active" : "";
-                    <li class="page-item @(css)"><a class="page-link" href="#" data-page="@i">@i</a></li>
+                    <li class="page-item @css">
+                        <a class="page-link" href="#" data-page="@i">@i</a>
+                    </li>
                 }
             </ul>
         </nav>
     </div>
+
 </div>
