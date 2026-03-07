@@ -17,9 +17,9 @@ namespace EBayCloneAPI.Controllers
         public async Task<IActionResult> Create(
     [FromForm] int productId,
     [FromForm] int quantity,
-    [FromForm] string address,
-    [FromForm] string paymentMethod,
-    [FromForm] string region,
+    [FromForm] string? address,
+    [FromForm] string? paymentMethod,
+    [FromForm] string? region,
     [FromForm] int? userId)
         {
             var sessionUser = HttpContext.Session.GetInt32("UserId");
@@ -32,9 +32,9 @@ namespace EBayCloneAPI.Controllers
                 uid.Value,
                 productId,
                 quantity,
-                address,
-                paymentMethod,
-                region);
+                address ?? string.Empty,
+                paymentMethod ?? "COD",
+                region ?? "north");
 
             return Ok(new
             {
