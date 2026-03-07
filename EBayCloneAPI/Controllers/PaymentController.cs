@@ -112,26 +112,6 @@ public class PaymentController : ControllerBase
             return Redirect($"{baseUrl}/Payment/PaymentFailed?orderId={payment.OrderId}");
         }
     }
-
-    [HttpGet("paypal-cancel")]
-    public async Task<IActionResult> PaypalCancel(string token)
-    {
-        var payment = _context.Payments
-            .FirstOrDefault(p => p.TransactionId == token);
-
-        if (payment != null)
-        {
-            // Cập nhật trạng thái payment → Cancelled
-            payment.Status = "Cancelled";
-            await _context.SaveChangesAsync();
-
-            await PublishPaymentFailedAsync(payment.OrderId, "PendingPayment", "Cancelled");
-        }
-
-        var baseUrl = _config["Frontend:BaseUrl"];
-        return Redirect($"{baseUrl}/Payment/PaymentFailed?orderId={payment?.OrderId}");
-    }
-
     private async Task PublishPaymentFailedAsync(int? orderId, string oldStatus, string newStatus)
     {
         if (orderId == null) return;
