@@ -152,4 +152,11 @@ public class PaymentController : ControllerBase
             ChangedAt  = DateTime.UtcNow
         });
     }
+    
+    [HttpGet("paypal-cancel")]
+    public IActionResult PaypalCancel()
+    {
+        var baseUrl = _config["Frontend:BaseUrl"];
+        return Redirect($"{baseUrl}/Payment/PaymentCancel");
+    }
 }
