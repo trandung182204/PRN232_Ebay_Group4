@@ -3,7 +3,7 @@
 using System.Diagnostics;
 using EBayCloneAPI.Services;
 
-namespace EBayAPI.Services
+namespace EBayCloneAPI.Services
 {
     public class PaymentService : IPaymentService
     {

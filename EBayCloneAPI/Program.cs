@@ -97,6 +97,13 @@ namespace EBayCloneAPI
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
 
+            // Payment Providers
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.CodPaymentProvider>();
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.PaypalPaymentProvider>();
+
+            // PayPal HTTP client
+            builder.Services.AddHttpClient<EBayAPI.Services.PaypalService>();
+
             builder.Services.AddSingleton<PluginManager>();
 
             builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();

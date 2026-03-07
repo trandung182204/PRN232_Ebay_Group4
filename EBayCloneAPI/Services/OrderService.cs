@@ -145,7 +145,7 @@ namespace EBayCloneAPI.Services
                 return false;
 
             var (success, _) =
-                await _payment.PayAsync(paymentMethod, order.TotalPrice ?? 0, authToken, secureKey);
+                await _payment.PayAsync(paymentMethod, order.TotalPrice, authToken, secureKey);
 
             if (!success)
                 return false;
@@ -254,7 +254,7 @@ namespace EBayCloneAPI.Services
                                 BuyerName  = user.Username ?? "Customer",
                                 OldStatus  = EBayAPI.Enums.OrderStatus.PendingPayment.ToString(),
                                 NewStatus  = "Cancelled",
-                                TotalPrice = c.TotalPrice ?? 0,
+                                TotalPrice = c.TotalPrice,
                                 ChangedAt  = DateTime.UtcNow
                             });
                         }
@@ -321,7 +321,7 @@ namespace EBayCloneAPI.Services
                     Quantity        = quantity,
                     UnitPrice       = product.Price ?? 0,
                     ShippingFee     = shippingFee,
-                    TotalPrice      = order.TotalPrice ?? 0,
+                    TotalPrice      = order.TotalPrice,
                     PaymentMethod   = paymentMethod,
                     ShippingAddress = addressText,
                     Region          = region,
@@ -355,7 +355,7 @@ namespace EBayCloneAPI.Services
                     OrderId       = order.Id,
                     BuyerEmail    = buyer.Email,
                     BuyerName     = buyer.Username ?? "Customer",
-                    TotalPrice    = order.TotalPrice ?? 0,
+                    TotalPrice    = order.TotalPrice,
                     PaymentMethod = paymentMethod,
                     PaidAt        = paidAt,
                     Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
@@ -395,7 +395,7 @@ namespace EBayCloneAPI.Services
                     BuyerName  = buyer.Username ?? "Customer",
                     OldStatus  = oldStatus.ToString(),
                     NewStatus  = newStatus.ToString(),
-                    TotalPrice = order.TotalPrice ?? 0,
+                    TotalPrice = order.TotalPrice,
                     ChangedAt  = DateTime.UtcNow
                 });
             }
