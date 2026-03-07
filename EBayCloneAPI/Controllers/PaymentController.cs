@@ -68,39 +68,88 @@ public class PaymentController : ControllerBase
         if (payment == null)
             return BadRequest("Payment not found");
 
-        var provider = _paymentService.GetProvider("PAYPAL");
+        var baseUrl = _config["Frontend:BaseUrl"];
 
-        await provider.ConfirmPayment(payment.Id);
-
-        // Publish OrderPaidEvent để gửi mail xác nhận thanh toán
-        var order = await _context.OrderTables.FindAsync(payment.OrderId);
-        var buyer = order != null ? await _context.Users.FindAsync(order.BuyerId) : null;
-
-        if (order != null && buyer != null && !string.IsNullOrEmpty(buyer.Email))
+        try
         {
-            var items = await _context.OrderItems
-                .Include(i => i.Product)
-                .Where(i => i.OrderId == order.Id)
-                .ToListAsync();
+            var provider = _paymentService.GetProvider("PAYPAL");
+            await provider.ConfirmPayment(payment.Id);
 
-            await _eventBus.PublishAsync(new OrderPaidEvent
+            // Publish OrderPaidEvent → gửi mail xác nhận thanh toán
+            var order = await _context.OrderTables.FindAsync(payment.OrderId);
+            var buyer = order != null ? await _context.Users.FindAsync(order.BuyerId) : null;
+
+            if (order != null && buyer != null && !string.IsNullOrEmpty(buyer.Email))
             {
-                OrderId       = order.Id,
-                BuyerEmail    = buyer.Email,
-                BuyerName     = buyer.Username ?? "Customer",
-                TotalPrice    = order.TotalPrice,
-                PaymentMethod = "PAYPAL",
-                PaidAt        = DateTime.UtcNow,
-                Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
+                var items = await _context.OrderItems
+                    .Include(i => i.Product)
+                    .Where(i => i.OrderId == order.Id)
+                    .ToListAsync();
+
+                await _eventBus.PublishAsync(new OrderPaidEvent
                 {
-                    ProductName = i.Product?.Title ?? "Product",
-                    Quantity    = i.Quantity ?? 1,
-                    UnitPrice   = i.UnitPrice ?? 0
-                }).ToList()
-            });
+                    OrderId       = order.Id,
+                    BuyerEmail    = buyer.Email,
+                    BuyerName     = buyer.Username ?? "Customer",
+                    TotalPrice    = order.TotalPrice,
+                    PaymentMethod = "PAYPAL",
+                    PaidAt        = DateTime.UtcNow,
+                    Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
+                    {
+                        ProductName = i.Product?.Title ?? "Product",
+                        Quantity    = i.Quantity ?? 1,
+                        UnitPrice   = i.UnitPrice ?? 0
+                    }).ToList()
+                });
+            }
+
+            return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
+        }
+        catch
+        {
+            // Capture thất bại (ví dụ: không đủ tiền) → gửi mail thất bại
+            await PublishPaymentFailedAsync(payment.OrderId, "PendingPayment", "Failed");
+            return Redirect($"{baseUrl}/Payment/PaymentFailed?orderId={payment.OrderId}");
+        }
+    }
+
+    [HttpGet("paypal-cancel")]
+    public async Task<IActionResult> PaypalCancel(string token)
+    {
+        var payment = _context.Payments
+            .FirstOrDefault(p => p.TransactionId == token);
+
+        if (payment != null)
+        {
+            // Cập nhật trạng thái payment → Cancelled
+            payment.Status = "Cancelled";
+            await _context.SaveChangesAsync();
+
+            await PublishPaymentFailedAsync(payment.OrderId, "PendingPayment", "Cancelled");
         }
 
         var baseUrl = _config["Frontend:BaseUrl"];
-        return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
+        return Redirect($"{baseUrl}/Payment/PaymentFailed?orderId={payment?.OrderId}");
+    }
+
+    private async Task PublishPaymentFailedAsync(int? orderId, string oldStatus, string newStatus)
+    {
+        if (orderId == null) return;
+
+        var order = await _context.OrderTables.FindAsync(orderId);
+        var buyer = order != null ? await _context.Users.FindAsync(order.BuyerId) : null;
+
+        if (order == null || buyer == null || string.IsNullOrEmpty(buyer.Email)) return;
+
+        await _eventBus.PublishAsync(new OrderStatusChangedEvent
+        {
+            OrderId    = order.Id,
+            BuyerEmail = buyer.Email,
+            BuyerName  = buyer.Username ?? "Customer",
+            OldStatus  = oldStatus,
+            NewStatus  = newStatus,
+            TotalPrice = order.TotalPrice,
+            ChangedAt  = DateTime.UtcNow
+        });
     }
 }
