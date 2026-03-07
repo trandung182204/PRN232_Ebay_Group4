@@ -62,8 +62,21 @@ namespace EBayCloneAPI.Services
 
             var product = await _db.Products.FindAsync(productId);
 
+<<<<<<< HEAD
             if (product == null)
                 throw new ArgumentException("Product not found");
+=======
+        // 4️⃣ Create Payment (Pending)
+        var payment = new Payment
+        {
+            OrderId = order.Id,
+            UserId = userId,
+            Amount = total,
+            Method = paymentMethod,
+            Status = OrderStatus.PendingPayment,
+            PaidAt = null
+        };
+>>>>>>> feature/payment
 
             // 1️⃣ Create Address from text
             var address = new Address
@@ -139,7 +152,17 @@ namespace EBayCloneAPI.Services
             string authToken,
             string secureKey)
         {
+<<<<<<< HEAD
             var order = await _db.OrderTables.FindAsync(orderId);
+=======
+            OrderId = order.Id,
+            UserId = order.BuyerId,
+            Amount = order.TotalPrice,
+            Method = paymentMethod,
+            Status = OrderStatus.Paid,
+            PaidAt = DateTime.UtcNow
+        };
+>>>>>>> feature/payment
 
             if (order == null || order.Status != EBayAPI.Enums.OrderStatus.PendingPayment)
                 return false;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EBayAPI.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EBayCloneAPI.Models;
@@ -28,12 +29,13 @@ public partial class Payment
 
     [Column("status")]
     [StringLength(20)]
-    public string? Status { get; set; }
+    public OrderStatus Status { get; set; }
 
     [Column("paidAt", TypeName = "datetime")]
     public DateTime? PaidAt { get; set; }
 
     // PayPal Order ID
+    [Column("TransactionId")]
     public string? TransactionId { get; set; }
     
     [ForeignKey("OrderId")]
