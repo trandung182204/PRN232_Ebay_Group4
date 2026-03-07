@@ -3,6 +3,17 @@ using EBayCloneAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
+using System;
+using EBayAPI.Configurations;
+using EBayAPI.Models.Hooks;
+using EBayCloneAPI.Data;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
+using Serilog.Events;
+
 namespace EBayAPI
 {
     public class Program
@@ -11,9 +22,38 @@ namespace EBayAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure Serilog early so startup logs go to file as well
+            var runId = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}-{Environment.ProcessId}";
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                // Use a unique filename per run (timestamp + process id)
+                .WriteTo.File(
+                    path: $"logs/ebayclone-{runId}.txt",
+                    rollingInterval: RollingInterval.Infinite,
+                    fileSizeLimitBytes: null,
+                    retainedFileCountLimit: null,
+                    shared: true)
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
+
+
+            builder.Configuration
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter()
+        );
+    });
             // CORS - allow frontend to call API during development
             builder.Services.AddCors(options =>
             {
@@ -33,6 +73,15 @@ namespace EBayAPI
                 options.Cookie.IsEssential = true;
             });
 
+            // Memory cache used by rate limiting middleware
+            builder.Services.AddMemoryCache();
+
+            builder.Services
+                .AddOptions<OrderCleanupSettings>()
+                .Bind(builder.Configuration.GetSection("OrderCleanupSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             // Repositories
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IUserRepository, EBayCloneAPI.Repositories.UserRepository>();
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IProductRepository, EBayCloneAPI.Repositories.ProductRepository>();
@@ -46,6 +95,15 @@ namespace EBayAPI
             builder.Services.AddScoped<IPaymentProvider, PaypalPaymentProvider>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddHttpClient<PaypalService>();
+
+            builder.Services.AddSingleton<PluginManager>();
+
+            builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();
+            builder.Services.AddSingleton<IShippingHook, VNPostShippingPlugin>();
+
+            builder.Services.AddScoped<IPaymentEventHook, TransactionLogHook>();
+            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
+
             // Hosted cleanup service
             /*
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();
@@ -87,6 +145,20 @@ namespace EBayAPI
 
             var app = builder.Build();
             app.UseMiddleware<PaymentAuthMiddleware>();
+            // ===== RUN DATABASE SEEDER =====
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                DbSeeder.SeedAsync(db).Wait();
+            }
+            app.UseSerilogRequestLogging();
+
+            // Apply IP rate limiting only to API endpoints
+            app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), branch =>
+            {
+                branch.UseMiddleware<EBayCloneAPI.Middleware.IpRateLimitingMiddleware>();
+            });
+
             // Configure the HTTP request pipeline.
             // Enable Swagger UI in all environments for testing
             app.UseSwagger();

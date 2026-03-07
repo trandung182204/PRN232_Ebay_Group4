@@ -38,6 +38,7 @@ namespace EbayCloneWeb.Pages.Account
 
             var json = await res.Content.ReadFromJsonAsync<JsonElement>();
             int id = 0;
+            string role = "";
             if (json.ValueKind == JsonValueKind.Object)
             {
                 if (json.TryGetProperty("id", out var idProp) || json.TryGetProperty("Id", out idProp))
@@ -46,6 +47,10 @@ namespace EbayCloneWeb.Pages.Account
                         id = idProp.GetInt32();
                     else if (idProp.ValueKind == JsonValueKind.String && int.TryParse(idProp.GetString(), out var parsed))
                         id = parsed;
+                }
+                if (json.TryGetProperty("role", out var roleProp) || json.TryGetProperty("Role", out roleProp))
+                {
+                    role = roleProp.GetString() ?? "";
                 }
             }
 
@@ -56,13 +61,16 @@ namespace EbayCloneWeb.Pages.Account
             }
 
             HttpContext.Session.SetInt32("UserId", id);
+            HttpContext.Session.SetString("Role", role);
 
-            if (!string.IsNullOrEmpty(ReturnUrl))
+            if (role.ToLower() == "admin")
             {
-                return LocalRedirect(ReturnUrl);
+                return RedirectToPage("/Admin/Orders/Index");
             }
 
             return RedirectToPage("/Index");
+
+
         }
     }
 }

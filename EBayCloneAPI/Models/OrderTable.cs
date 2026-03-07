@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EBayAPI.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EBayCloneAPI.Models;
@@ -26,8 +27,7 @@ public partial class OrderTable
     public decimal TotalPrice { get; set; }
 
     [Column("status")]
-    [StringLength(20)]
-    public string? Status { get; set; }
+    public OrderStatus Status { get; set; }
 
     [ForeignKey("AddressId")]
     [InverseProperty("OrderTables")]
