@@ -1,11 +1,9 @@
-
+using EBayAPI.Services;
+using EBayCloneAPI.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System;
+using Microsoft.OpenApi.Models;
 
-namespace EBayCloneAPI
+namespace EBayAPI
 {
     public class Program
     {
@@ -41,18 +39,54 @@ namespace EBayCloneAPI
 
             // Services
             builder.Services.AddScoped<EBayCloneAPI.Services.IEmailService, EBayCloneAPI.Services.EmailService>();
-            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, EBayCloneAPI.Services.PaymentService>();
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, PaymentService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
-
+            builder.Services.AddScoped<IPaymentProvider, CodPaymentProvider>();
+            builder.Services.AddScoped<IPaymentProvider, PaypalPaymentProvider>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddHttpClient<PaypalService>();
             // Hosted cleanup service
+            /*
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();
+            */
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "EBay Clone API",
+                    Version = "v1"
+                });
+
+                // 👉 Add X-PAYMENT-KEY
+                c.AddSecurityDefinition("PaymentKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Name = "X-PAYMENT-KEY",
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "PaymentKey"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
 
             var app = builder.Build();
-
+            app.UseMiddleware<PaymentAuthMiddleware>();
             // Configure the HTTP request pipeline.
             // Enable Swagger UI in all environments for testing
             app.UseSwagger();

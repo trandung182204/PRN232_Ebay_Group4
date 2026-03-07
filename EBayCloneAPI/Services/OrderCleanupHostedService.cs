@@ -1,3 +1,4 @@
+/*
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace EBayCloneAPI.Services
             _logger = logger;
             _provider = provider;
         }
-
+　あ
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Order cleanup service started");
@@ -37,3 +38,4 @@ namespace EBayCloneAPI.Services
         }
     }
 }
+*/
