@@ -18,7 +18,7 @@ public class PaymentAuthMiddleware
             var path = context.Request.Path.Value;
 
             // Cho phép PayPal redirect
-            if (path.Contains("paypal-success") || path.Contains("confirm"))
+            if (path.Contains("paypal-success") || path.Contains("confirm") || path.Contains("paypal-cancel"))
             {
                 await _next(context);
                 return;

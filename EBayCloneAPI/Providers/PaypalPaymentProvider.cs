@@ -28,7 +28,7 @@ public class PaypalPaymentProvider : IPaymentProvider
             UserId = userId,
             Amount = amount,
             Method = "PAYPAL",
-            Status = "Pending",
+            Status = OrderStatus.PendingPayment,
             TransactionId = paypalOrderId
         };
 
@@ -53,7 +53,7 @@ public class PaypalPaymentProvider : IPaymentProvider
         {
             var captureId = await _paypal.CaptureOrderAsync(payment.TransactionId);
 
-            payment.Status = "Paid";
+            payment.Status = OrderStatus.PendingPayment;
             payment.PaidAt = DateTime.UtcNow;
             payment.TransactionId = captureId;
         }

@@ -25,7 +25,7 @@ public class CodPaymentProvider : IPaymentProvider
             UserId = userId,
             Amount = amount,
             Method = "COD",
-            Status = "Paid",
+            Status = OrderStatus.Paid,
             PaidAt = DateTime.UtcNow
         };
 

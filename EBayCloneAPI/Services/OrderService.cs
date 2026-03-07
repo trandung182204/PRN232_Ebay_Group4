@@ -99,7 +99,7 @@ public class OrderService : IOrderService
             UserId = userId,
             Amount = total,
             Method = paymentMethod,
-            Status = "Pending",
+            Status = OrderStatus.PendingPayment,
             PaidAt = null
         };
 
@@ -132,7 +132,7 @@ public class OrderService : IOrderService
             UserId = order.BuyerId,
             Amount = order.TotalPrice,
             Method = paymentMethod,
-            Status = "Paid",
+            Status = OrderStatus.Paid,
             PaidAt = DateTime.UtcNow
         };
 

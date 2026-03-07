@@ -71,4 +71,11 @@ public class PaymentController : ControllerBase
         var baseUrl = _config["Frontend:BaseUrl"];
         return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
     }
+    
+    [HttpGet("paypal-cancel")]
+    public IActionResult PaypalCancel()
+    {
+        var baseUrl = _config["Frontend:BaseUrl"];
+        return Redirect($"{baseUrl}/Payment/PaymentCancel");
+    }
 }
