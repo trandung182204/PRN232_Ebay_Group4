@@ -1,7 +1,9 @@
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using EBayAPI.Configurations;
+using EBayAPI.Enums;
 using EBayAPI.Events;
 using EBayAPI.Models.Hooks;
 using EBayCloneAPI.Data;
@@ -62,21 +64,8 @@ namespace EBayCloneAPI.Services
 
             var product = await _db.Products.FindAsync(productId);
 
-<<<<<<< HEAD
             if (product == null)
                 throw new ArgumentException("Product not found");
-=======
-        // 4️⃣ Create Payment (Pending)
-        var payment = new Payment
-        {
-            OrderId = order.Id,
-            UserId = userId,
-            Amount = total,
-            Method = paymentMethod,
-            Status = OrderStatus.PendingPayment,
-            PaidAt = null
-        };
->>>>>>> feature/payment
 
             // 1️⃣ Create Address from text
             var address = new Address
@@ -129,7 +118,7 @@ namespace EBayCloneAPI.Services
                 UserId  = userId,
                 Amount  = total,
                 Method  = paymentMethod,
-                Status  = "Pending",
+                Status  = OrderStatus.PendingPayment,
                 PaidAt  = null
             };
 
@@ -152,17 +141,7 @@ namespace EBayCloneAPI.Services
             string authToken,
             string secureKey)
         {
-<<<<<<< HEAD
             var order = await _db.OrderTables.FindAsync(orderId);
-=======
-            OrderId = order.Id,
-            UserId = order.BuyerId,
-            Amount = order.TotalPrice,
-            Method = paymentMethod,
-            Status = OrderStatus.Paid,
-            PaidAt = DateTime.UtcNow
-        };
->>>>>>> feature/payment
 
             if (order == null || order.Status != EBayAPI.Enums.OrderStatus.PendingPayment)
                 return false;
@@ -181,7 +160,7 @@ namespace EBayCloneAPI.Services
                 UserId  = order.BuyerId,
                 Amount  = order.TotalPrice,
                 Method  = paymentMethod,
-                Status  = "Paid",
+                Status  = OrderStatus.Paid,
                 PaidAt  = paidAt
             };
 
