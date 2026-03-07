@@ -12,18 +12,19 @@ namespace EbayCloneWeb.Pages.Order
     public class CreateModel : PageModel
     {
         private readonly IHttpClientFactory _factory;
-        public CreateModel(IHttpClientFactory factory) => _factory = factory;
+        private readonly string _secretKey;
 
-        [BindProperty]
-        public int ProductId { get; set; }
-        [BindProperty]
-        public int Quantity { get; set; } = 1;
-        [BindProperty]
-        public string Region { get; set; } = "north";
-        [BindProperty]
-        public string PaymentMethod { get; set; } = "PayPal";
-        [BindProperty]
-        public string? Address { get; set; }
+        public CreateModel(IHttpClientFactory factory, IConfiguration config)
+        {
+            _factory = factory;
+            _secretKey = config["Payment:SecretKey"];
+        }
+
+        [BindProperty] public int ProductId { get; set; }
+        [BindProperty] public int Quantity { get; set; } = 1;
+        [BindProperty] public string Region { get; set; } = "north";
+        [BindProperty] public string PaymentMethod { get; set; } = "PAYPAL";
+        [BindProperty] public string? Address { get; set; }
 
         public ProductDto? Product { get; set; }
         public List<string> ImagesList { get; set; } = new List<string>();
@@ -60,9 +61,11 @@ namespace EbayCloneWeb.Pages.Order
                     }
                     catch
                     {
-                        ImagesList = Product.Images.Split(new[] { ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries)
+                        ImagesList = Product.Images
+                            .Split(new[] { ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries)
                             .Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                        if (ImagesList.Count == 0 && !string.IsNullOrEmpty(Product.Images)) ImagesList.Add(Product.Images);
+                        if (ImagesList.Count == 0 && !string.IsNullOrEmpty(Product.Images))
+                            ImagesList.Add(Product.Images);
                     }
                 }
 
@@ -88,54 +91,71 @@ namespace EbayCloneWeb.Pages.Order
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
             {
-                // send user to login and return back to this order page after successful login
                 var returnUrl = $"/Order/Create?id={ProductId}";
                 return RedirectToPage("/Account/Login", new { ReturnUrl = returnUrl });
             }
 
             var client = _factory.CreateClient();
-            client.BaseAddress = new System.Uri("http://localhost:5174/");
+            client.BaseAddress = new Uri("http://localhost:5174/");
+
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(ProductId.ToString()), "productId");
             content.Add(new StringContent(Quantity.ToString()), "quantity");
-            content.Add(new StringContent(Address ?? string.Empty), "address");
-            content.Add(new StringContent(Region ?? string.Empty), "region");
-            content.Add(new StringContent(PaymentMethod ?? string.Empty), "paymentMethod");
-            // include user id in form so API can associate order (API session is separate)
-            var sessionUser = HttpContext.Session.GetInt32("UserId");
-            if (sessionUser.HasValue)
-            {
-                content.Add(new StringContent(sessionUser.Value.ToString()), "userId");
-            }
-            // supply auth token and secureKey for payment/shipping simulation
+            content.Add(new StringContent(Address ?? ""), "address");
+            content.Add(new StringContent(Region ?? ""), "region");
+            content.Add(new StringContent(PaymentMethod ?? ""), "paymentMethod");
+            content.Add(new StringContent(userId.Value.ToString()), "userId");
+
             content.Add(new StringContent("valid_token"), "authToken");
             content.Add(new StringContent("SECURE_KEY_123"), "secureKey");
 
             var res = await client.PostAsync("api/Order/create", content);
+
             if (!res.IsSuccessStatusCode)
             {
-                // try to read error detail from API
-                string detail = string.Empty;
-                try { detail = await res.Content.ReadAsStringAsync(); } catch { }
-                TempData["Error"] = string.IsNullOrEmpty(detail) ? $"Failed to create order (status {res.StatusCode})" : $"Failed to create order: {detail}";
+                TempData["Error"] = "Create order failed";
                 return RedirectToPage("/Index");
             }
 
             var json = await res.Content.ReadFromJsonAsync<JsonElement>();
-            var orderId = 0;
-            if (json.ValueKind == JsonValueKind.Object && json.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.Number)
+
+            var orderId = json.GetProperty("id").GetInt32();
+
+            // ============================
+            // PAYPAL PAYMENT
+            // ============================
+            if (PaymentMethod == "PAYPAL")
             {
-                orderId = idProp.GetInt32();
+                var paymentBody = new
+                {
+                    orderId = orderId,
+                    userId = userId.Value,
+                    method = "PAYPAL"
+                };
+// 🔴 QUAN TRỌNG: thêm header cho middleware
+                client.DefaultRequestHeaders.Remove("X-PAYMENT-KEY");
+                client.DefaultRequestHeaders.Add("X-PAYMENT-KEY", _secretKey);
+                var paymentRes = await client.PostAsJsonAsync("api/payments", paymentBody);
+
+                if (!paymentRes.IsSuccessStatusCode)
+                {
+                    var err = await paymentRes.Content.ReadAsStringAsync();
+                    TempData["Error"] = $"Create PayPal payment failed: {err}";
+                    return RedirectToPage("/Index");
+                }
+
+                var paymentJson = await paymentRes.Content.ReadFromJsonAsync<JsonElement>();
+
+                var approveUrl = paymentJson.GetProperty("approveUrl").GetString();
+
+                return Redirect(approveUrl!);
             }
 
-            if (orderId > 0)
-            {
-                TempData["Success"] = $"Order created: {orderId}";
-            }
-            else
-            {
-                TempData["Success"] = "Order created";
-            }
+            // ============================
+            // COD
+            // ============================
+
+            TempData["Success"] = $"Order created successfully: {orderId}";
             return RedirectToPage("/Index");
         }
 

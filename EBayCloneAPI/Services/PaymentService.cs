@@ -1,16 +1,20 @@
-using Microsoft.Extensions.Logging;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
-namespace EBayCloneAPI.Services
+
+using System.Diagnostics;
+using EBayCloneAPI.Services;
+
+namespace EBayAPI.Services
 {
     public class PaymentService : IPaymentService
     {
-        private readonly ILogger<PaymentService> _logger;
-        public PaymentService(ILogger<PaymentService> logger) => _logger = logger;
-
-        // Simulate payments (PayPal, COD). Verify authToken & secureKey.
+        private readonly IEnumerable<IPaymentProvider> _providers;
+private readonly ILogger<PaymentService> _logger;
+        public PaymentService(IEnumerable<IPaymentProvider> providers, ILogger<PaymentService> logger)
+        {
+            _providers = providers;
+            _logger = logger;
+        }
+// Simulate payments (PayPal, COD). Verify authToken & secureKey.
         public async Task<(bool success, string transactionId)> PayAsync(string method, decimal amount, string authToken, string secureKey)
         {
             var sw = Stopwatch.StartNew();
@@ -29,6 +33,16 @@ namespace EBayCloneAPI.Services
             _logger.LogInformation("Payment processed in {ms}ms for {method}", sw.ElapsedMilliseconds, method);
 
             return (true, Guid.NewGuid().ToString());
+        }
+        public IPaymentProvider GetProvider(string method)
+        {
+            var provider = _providers.FirstOrDefault(p =>
+                p.Method.Equals(method, StringComparison.OrdinalIgnoreCase));
+
+            if (provider == null)
+                throw new Exception($"Payment method {method} not supported");
+
+            return provider;
         }
     }
 }

@@ -1,6 +1,5 @@
 using EBayCloneAPI.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace EBayCloneAPI.Controllers
 {
