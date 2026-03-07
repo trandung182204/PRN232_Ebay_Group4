@@ -12,7 +12,7 @@ namespace EBayAPI.Models.Hooks
             _db = db;
         }
 
-        public async Task OnShipmentCreatedAsync(OrderTable order, string trackingNumber)
+        public async Task OnShipmentCreated(OrderTable order, string trackingNumber)
         {
             _db.SystemLogs.Add(new SystemLog
             {

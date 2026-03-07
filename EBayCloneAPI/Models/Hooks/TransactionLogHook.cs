@@ -12,7 +12,7 @@ namespace EBayAPI.Models.Hooks
             _db = db;
         }
 
-        public async Task OnPaymentSuccessAsync(OrderTable order, Payment payment, string transactionId)
+        public async Task OnPaymentSuccess(OrderTable order, Payment payment, string transactionId)
         {
             _db.SystemLogs.Add(new SystemLog
             {

@@ -4,6 +4,6 @@ namespace EBayAPI.Models.Hooks
 {
     public interface IShippingEventHook
     {
-        Task OnShipmentCreatedAsync(OrderTable order, string trackingNumber);
+        Task OnShipmentCreated(OrderTable order, string trackingNumber);
     }
 }
