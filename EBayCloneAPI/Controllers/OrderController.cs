@@ -1,4 +1,3 @@
-/*
 using EBayCloneAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -119,4 +118,3 @@ namespace EBayCloneAPI.Controllers
     }
 
 }
-*/

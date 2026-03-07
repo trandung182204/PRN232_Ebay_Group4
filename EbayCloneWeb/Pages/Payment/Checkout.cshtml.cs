@@ -1,11 +1,19 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace EbayCloneWeb.Pages.Payment;
+namespace EbayWeb.Pages.Payment;
 
-public class Checkout : PageModel
+public class CheckoutModel : PageModel
 {
-    public void OnGet()
+    public int OrderId { get; set; }
+    public int UserId { get; set; }
+    public decimal TotalPrice { get; set; }
+
+    public void OnGet(int orderId)
     {
-        
+        // demo data
+        OrderId = orderId;
+        UserId = 6;
+        TotalPrice = 200;
     }
 }

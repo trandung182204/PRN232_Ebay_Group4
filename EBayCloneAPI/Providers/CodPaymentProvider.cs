@@ -1,3 +1,4 @@
+using EBayAPI.Enums;
 using EBayCloneAPI.Data;
 using EBayCloneAPI.Models;
 
@@ -31,7 +32,7 @@ public class CodPaymentProvider : IPaymentProvider
         _context.Payments.Add(payment);
 
         var order = await _context.OrderTables.FindAsync(orderId);
-        order.Status = "Paid";
+        order.Status = OrderStatus.Paid;
 
         await _context.SaveChangesAsync();
 

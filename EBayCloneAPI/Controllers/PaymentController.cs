@@ -1,4 +1,5 @@
 using EBayAPI.DTO;
+using EBayAPI.Enums;
 using EBayAPI.Services;
 using EBayCloneAPI.Data;
 using EBayCloneAPI.Services;
@@ -12,10 +13,13 @@ public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
     private readonly ApplicationDbContext _context;
-    public PaymentController(IPaymentService paymentService, ApplicationDbContext dbContext)
+    private readonly IConfiguration _config;
+
+    public PaymentController(IPaymentService paymentService, ApplicationDbContext dbContext, IConfiguration config)
     {
         _paymentService = paymentService;
         _context = dbContext;
+        _config = config;
     }
 
     [HttpPost]
@@ -26,16 +30,16 @@ public class PaymentController : ControllerBase
             return BadRequest("Order not found");
         if (order.BuyerId != dto.UserId)
             return BadRequest("Invalid user");
-        if (order.Status == "Paid")
+        if (order.Status == OrderStatus.Paid)
             return BadRequest("Order already paid");
-        if (order.Status != "Pending")
+        if (order.Status != OrderStatus.PendingPayment)
             return BadRequest("Order not available for payment");
         var provider = _paymentService.GetProvider(dto.Method);
 
         var result = await provider.CreatePayment(
             dto.OrderId,
             dto.UserId,
-            order.TotalPrice   // ✅ lấy từ DB
+            order.TotalPrice // ✅ lấy từ DB
         );
 
         return Ok(result);
@@ -50,7 +54,7 @@ public class PaymentController : ControllerBase
 
         return Ok("Payment confirmed");
     }
-    
+
     [HttpGet("paypal-success")]
     public async Task<IActionResult> PaypalSuccess(string token)
     {
@@ -64,6 +68,7 @@ public class PaymentController : ControllerBase
 
         await provider.ConfirmPayment(payment.Id);
 
-        return Redirect("http://localhost:5173/payment-success");
+        var baseUrl = _config["Frontend:BaseUrl"];
+        return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
     }
 }

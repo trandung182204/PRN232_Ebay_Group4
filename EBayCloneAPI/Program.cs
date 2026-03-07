@@ -2,15 +2,9 @@ using EBayAPI.Services;
 using EBayCloneAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-
-using System;
 using EBayAPI.Configurations;
 using EBayAPI.Models.Hooks;
 using EBayCloneAPI.Data;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 
@@ -62,7 +56,7 @@ namespace EBayAPI
                     policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
                 });
             });
-            builder.Services.AddDbContext<EBayCloneAPI.Data.ApplicationDbContext>(options =>
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
             // Session
             builder.Services.AddDistributedMemoryCache();
@@ -87,10 +81,9 @@ namespace EBayAPI
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IProductRepository, EBayCloneAPI.Repositories.ProductRepository>();
 
             // Services
-            builder.Services.AddScoped<EBayCloneAPI.Services.IEmailService, EBayCloneAPI.Services.EmailService>();
-            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, PaymentService>();
-            builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
-            builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IShippingService, ShippingService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<IPaymentProvider, CodPaymentProvider>();
             builder.Services.AddScoped<IPaymentProvider, PaypalPaymentProvider>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();

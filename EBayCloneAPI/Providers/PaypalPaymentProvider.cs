@@ -1,3 +1,4 @@
+using EBayAPI.Enums;
 using EBayAPI.Services;
 using EBayCloneAPI.Data;
 using EBayCloneAPI.Models;
@@ -48,14 +49,17 @@ public class PaypalPaymentProvider : IPaymentProvider
         if (payment == null)
             throw new Exception("Payment not found");
 
-        var captureId = await _paypal.CaptureOrderAsync(payment.TransactionId);
+        if (payment.TransactionId != null)
+        {
+            var captureId = await _paypal.CaptureOrderAsync(payment.TransactionId);
 
-        payment.Status = "Paid";
-        payment.PaidAt = DateTime.UtcNow;
-        payment.TransactionId = captureId;
+            payment.Status = "Paid";
+            payment.PaidAt = DateTime.UtcNow;
+            payment.TransactionId = captureId;
+        }
 
         var order = await _context.OrderTables.FindAsync(payment.OrderId);
-        order.Status = "Paid";
+        if (order != null) order.Status = OrderStatus.Paid;
 
         await _context.SaveChangesAsync();
 
