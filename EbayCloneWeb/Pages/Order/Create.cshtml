@@ -64,13 +64,17 @@
                                         <input asp-for="Quantity" class="form-control" />
                                     </div>
                                     <div class="col-8">
-                                        <label class="form-label small">Region</label>
-                                        <select asp-for="Region" class="form-select">
-                                            <option value="north">North</option>
-                                            <option value="central">Central</option>
-                                            <option value="south">South</option>
+                                        <label class="form-label small">Khu vực giao hàng (phí ship)</label>
+                                        <select asp-for="Region" class="form-select" id="regionSelect">
+                                            <option value="hanoi">Hà Nội (20k)</option>
+                                            <option value="mienbac">Miền Bắc (30k)</option>
+                                            <option value="mientrung">Miền Trung (40k)</option>
+                                            <option value="miennam">Miền Nam (50k)</option>
                                         </select>
                                     </div>
+                                </div>
+                                <div class="mb-2 small text-muted" id="shippingSummary">
+                                    Phí ship: <span id="shippingFee">20</span>k — Tổng ước tính: <span id="totalEstimate">—</span>
                                 </div>
 
                                 <div class="mb-3">
@@ -110,7 +114,7 @@
             <div class="card shadow-sm">
                 <div class="card-body small text-muted">
                     <h6>Shipping</h6>
-                    <p>Calculated at checkout. Estimated delivery 3-7 business days.</p>
+                    <p>Phí theo khu vực (hiển thị bên trái). Giao hàng ước tính 3-7 ngày.</p>
                     <h6>Returns</h6>
                     <p>30-day return policy.</p>
                 </div>
@@ -118,3 +122,24 @@
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        var price = @(Model.Product?.Price ?? 0);
+        var fees = { hanoi: 20, mienbac: 30, mientrung: 40, miennam: 50 };
+        function update() {
+            var qty = parseInt(document.querySelector('input[name="Quantity"]')?.value || 1, 10);
+            var region = document.getElementById('regionSelect')?.value || 'hanoi';
+            var fee = fees[region] || 50;
+            var subtotal = price * qty;
+            var total = subtotal + fee;
+            var feeEl = document.getElementById('shippingFee');
+            var totalEl = document.getElementById('totalEstimate');
+            if (feeEl) feeEl.textContent = fee;
+            if (totalEl) totalEl.textContent = total + 'k';
+        }
+        document.getElementById('regionSelect')?.addEventListener('change', update);
+        document.querySelector('input[name="Quantity"]')?.addEventListener('input', update);
+        document.querySelector('input[name="Quantity"]')?.addEventListener('change', update);
+        update();
+    })();
+</script>

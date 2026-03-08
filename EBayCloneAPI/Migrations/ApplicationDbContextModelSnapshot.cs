@@ -398,8 +398,9 @@ namespace EBayAPI.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("orderDate");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("status");
 
                     b.Property<decimal?>("TotalPrice")

@@ -81,6 +81,7 @@ namespace EBayCloneAPI
             // Services
             builder.Services.AddScoped<EBayCloneAPI.Services.IEmailService, EBayCloneAPI.Services.EmailService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, EBayCloneAPI.Services.PaymentService>();
+            builder.Services.AddSingleton<EBayCloneAPI.Services.FakeShippingProviderService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
 

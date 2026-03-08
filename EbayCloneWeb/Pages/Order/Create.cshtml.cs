@@ -19,7 +19,7 @@ namespace EbayCloneWeb.Pages.Order
         [BindProperty]
         public int Quantity { get; set; } = 1;
         [BindProperty]
-        public string Region { get; set; } = "north";
+        public string Region { get; set; } = "hanoi";
         [BindProperty]
         public string PaymentMethod { get; set; } = "PayPal";
         [BindProperty]

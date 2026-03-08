@@ -53,13 +53,13 @@ namespace EBayCloneAPI.Services
             if (product == null)
                 throw new ArgumentException("Product not found");
 
-            // 1️⃣ Create Address from text
+            // 1️⃣ Create Address from text (State dùng luôn để lưu region, không cần cột mới)
             var address = new Address
             {
                 UserId = userId,
                 Street = addressText,
                 City = "Unknown",
-                State = "Unknown",
+                State = region,
                 Country = "Unknown",
                 FullName = "Customer",
                 Phone = "Unknown",
@@ -120,7 +120,7 @@ namespace EBayCloneAPI.Services
     string authToken,
     string secureKey)
         {
-            var order = await _db.OrderTables.FindAsync(orderId);
+            var order = await _db.OrderTables.Include(o => o.Address).FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null || order.Status != OrderStatus.PendingPayment)
                 return false;
@@ -146,6 +146,26 @@ namespace EBayCloneAPI.Services
             order.Status = OrderStatus.Paid;
 
             await _db.SaveChangesAsync();
+
+            // Khi Paid → auto create shipment (region lấy từ Address.State; dùng key nội bộ cho shipping)
+            var region = order.Address?.State ?? "north";
+            var (shipSuccess, trackingCode) = await _shipping.CreateShipmentAsync(order.Id, region, authToken, "SHIP_SECURE_456");
+            if (shipSuccess && !string.IsNullOrEmpty(trackingCode))
+            {
+                _db.ShippingInfos.Add(new ShippingInfo
+                {
+                    OrderId = order.Id,
+                    Carrier = "FakeCarrier",
+                    TrackingNumber = trackingCode,
+                    Status = "Pending",
+                    EstimatedArrival = DateTime.UtcNow.AddDays(3)
+                });
+                order.Status = OrderStatus.Shipping;
+                await _db.SaveChangesAsync();
+                foreach (var hook in _shippingHooks)
+                    await hook.OnShipmentCreatedAsync(order, trackingCode);
+                _logger.LogInformation("Order {OrderId} shipment created, tracking {TrackingCode}", order.Id, trackingCode);
+            }
 
             return true;
         }
@@ -192,13 +212,14 @@ namespace EBayCloneAPI.Services
 
         private decimal CalculateShippingFee(string region)
         {
-            // simple region-based fee
-            return region.ToLower() switch
+            // Phí ship theo khu vực (VN, đơn vị nghìn VND)
+            return (region ?? "").ToLowerInvariant() switch
             {
-                "north" => 5,
-                "south" => 7,
-                "central" => 6,
-                _ => 10,
+                "hanoi" or "hà nội" or "ha noi" => 20,
+                "mienbac" or "miền bắc" or "mien bac" or "north" => 30,
+                "mientrung" or "miền trung" or "mien trung" or "central" => 40,
+                "miennam" or "miền nam" or "mien nam" or "south" => 50,
+                _ => 50,
             };
         }
         public async Task<OrderTable?> GetOrderDetailAsync(int id)
