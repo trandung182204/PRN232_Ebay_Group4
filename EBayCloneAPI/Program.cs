@@ -1,6 +1,8 @@
 
 using System;
 using EBayAPI.Configurations;
+using EBayAPI.Events;
+using EBayAPI.Events.Handlers;
 using EBayAPI.Models.Hooks;
 using EBayCloneAPI.Data;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 
 namespace EBayCloneAPI
 {
@@ -17,17 +20,20 @@ namespace EBayCloneAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure Serilog early so startup logs go to file as well
+            var runId = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}-{Environment.ProcessId}";
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(builder.Configuration)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .Enrich.WithThreadId()
                 .WriteTo.Console()
-                .WriteTo.File("logs/ebayclone_.txt",
-                    rollingInterval: RollingInterval.Day,
-                    fileSizeLimitBytes: 10_000_000,
-                    rollOnFileSizeLimit: true,
-                    retainedFileCountLimit: 7)
+                // Use a unique filename per run (timestamp + process id)
+                .WriteTo.File(
+                    path: $"logs/ebayclone-{runId}.txt",
+                    rollingInterval: RollingInterval.Infinite,
+                    fileSizeLimitBytes: null,
+                    retainedFileCountLimit: null,
+                    shared: true)
                 .CreateLogger();
 
             builder.Host.UseSerilog();
@@ -74,6 +80,13 @@ namespace EBayCloneAPI
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            // Email settings (bound from appsettings "EmailSettings")
+            builder.Services
+                .AddOptions<EmailSettings>()
+                .Bind(builder.Configuration.GetSection("EmailSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             // Repositories
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IUserRepository, EBayCloneAPI.Repositories.UserRepository>();
             builder.Services.AddScoped<EBayCloneAPI.Repositories.IProductRepository, EBayCloneAPI.Repositories.ProductRepository>();
@@ -84,20 +97,45 @@ namespace EBayCloneAPI
             builder.Services.AddSingleton<EBayCloneAPI.Services.FakeShippingProviderService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
+            builder.Services.AddScoped<IPaymentEventHook, PaymentEmailHook>();
+            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
+
+            // Payment Providers
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.CodPaymentProvider>();
+            builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.PaypalPaymentProvider>();
+
+            // PayPal HTTP client
+            builder.Services.AddHttpClient<EBayAPI.Services.PaypalService>();
 
             builder.Services.AddSingleton<PluginManager>();
-
-            builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();
             builder.Services.AddSingleton<IShippingHook, VNPostShippingPlugin>();
 
-            builder.Services.AddScoped<IPaymentEventHook, TransactionLogHook>();
-            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
+            // ── KAN-18: Event Bus (singleton; uses IServiceScopeFactory internally) ──
+            builder.Services.AddSingleton<IEventBus, EventBus>();
+
+            // ── Order Created: confirmation email handler (fires on order placement) ──
+            builder.Services.AddScoped<IEventHandler<OrderCreatedEvent>, OrderCreatedEmailHandler>();
+
+            // ── KAN-16: Payment confirmation email handler ──
+            builder.Services.AddScoped<IEventHandler<OrderPaidEvent>, OrderPaidEmailHandler>();
+
+            // ── KAN-17: Order status-change email handler ──
+            builder.Services.AddScoped<IEventHandler<OrderStatusChangedEvent>, OrderStatusChangedEmailHandler>();
 
             // Hosted cleanup service
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title   = "eBayClone API",
+                    Version = "v1",
+                    Description = "PRN232 Group 4 — eBay Clone REST API"
+                });
+                c.EnableAnnotations();
+            });
 
             var app = builder.Build();
             // ===== RUN DATABASE SEEDER =====

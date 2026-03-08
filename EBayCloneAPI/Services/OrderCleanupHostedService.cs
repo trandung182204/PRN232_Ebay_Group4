@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
 using EBayAPI.Configurations;
@@ -29,7 +31,8 @@ namespace EBayCloneAPI.Services
                 {
                     using var scope = _provider.CreateScope();
                     var orders = scope.ServiceProvider.GetRequiredService<IOrderService>();
-                    await orders.CancelUnpaidOrdersAsync();
+                    
+                    await orders.AutoCancelOnlinePayments();
                 }
                 catch (System.Exception ex)
                 {

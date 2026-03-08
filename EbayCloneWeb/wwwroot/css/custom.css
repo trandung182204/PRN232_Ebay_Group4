@@ -1,0 +1,1086 @@
+/* ============================================================
+   eBay-Inspired Custom Stylesheet
+   ============================================================ */
+
+/* Color Palette */
+:root {
+    --eb-blue:   #0064D2;
+    --eb-red:    #E53238;
+    --eb-yellow: #F5AF02;
+    --eb-green:  #86B817;
+    --eb-dark:   #191919;
+    --eb-bg:     #F7F7F7;
+    --eb-border: #E0E0E0;
+    --eb-muted:  #767676;
+    --eb-white:  #FFFFFF;
+}
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+body {
+    background: var(--eb-bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    color: var(--eb-dark);
+}
+
+a { color: var(--eb-blue); }
+a:hover { color: #004aa1; }
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.eb-navbar {
+    background: var(--eb-white);
+    border-bottom: 1px solid var(--eb-border);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+.eb-navbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 16px;
+}
+
+/* Colored eBay-style Logo */
+.eb-logo {
+    text-decoration: none !important;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.eb-logo:hover { opacity: 0.9; }
+.eb-logo .eb-e { color: #E53238; font-style: italic; }
+.eb-logo .eb-b { color: #0064D2; font-style: italic; }
+.eb-logo .eb-a { color: #F5AF02; font-style: italic; }
+.eb-logo .eb-y { color: #86B817; font-style: italic; }
+.eb-logo .eb-clone {
+    color: #767676;
+    font-size: 0.85rem;
+    font-weight: 400;
+    font-style: normal;
+    vertical-align: middle;
+    letter-spacing: 0;
+}
+
+/* Search bar */
+.eb-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 680px;
+}
+
+.eb-search-group {
+    display: flex;
+    border: 2px solid var(--eb-dark);
+    border-radius: 24px;
+    overflow: hidden;
+    height: 42px;
+    background: var(--eb-white);
+}
+
+.eb-search-cat {
+    border: none;
+    border-right: 1px solid var(--eb-border);
+    border-radius: 22px 0 0 22px;
+    background: #f5f5f5;
+    font-size: 13px;
+    padding: 0 6px 0 12px;
+    min-width: 110px;
+    max-width: 150px;
+    color: var(--eb-dark);
+    outline: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.eb-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    font-size: 14px;
+    background: var(--eb-white);
+    min-width: 0;
+}
+
+.eb-search-input:focus { outline: none; box-shadow: none; }
+
+.eb-search-btn {
+    background: var(--eb-blue);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 0 22px 22px 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.eb-search-btn:hover { background: #0057b8; color: white; }
+
+/* Nav actions */
+.eb-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.eb-nav-user {
+    font-size: 13px;
+    color: var(--eb-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.eb-nav-link {
+    text-decoration: none;
+    color: var(--eb-dark);
+    font-size: 13px;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+.eb-nav-link:hover { color: var(--eb-blue); }
+
+.eb-nav-admin {
+    background: #fff3e0;
+    color: #d06000 !important;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #ffd699;
+    font-weight: 600;
+}
+.eb-nav-admin:hover { background: #ffe8b2; color: #c05000 !important; }
+
+.eb-logout-btn {
+    background: none;
+    border: none;
+    color: var(--eb-dark);
+    font-size: 13px;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+.eb-logout-btn:hover { color: var(--eb-blue); }
+
+.eb-signin-btn {
+    background: var(--eb-blue);
+    color: white !important;
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.eb-signin-btn:hover { background: #0057b8; color: white !important; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.eb-footer {
+    background: #191919;
+    color: #aaa;
+    margin-top: 48px;
+    padding: 40px 0 0;
+    font-size: 13px;
+}
+
+.eb-footer-logo {
+    font-size: 1.7rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    display: inline-block;
+    margin-bottom: 10px;
+    text-decoration: none !important;
+}
+.eb-footer-logo .eb-e { color: #E53238; font-style: italic; }
+.eb-footer-logo .eb-b { color: #0064D2; font-style: italic; }
+.eb-footer-logo .eb-a { color: #F5AF02; font-style: italic; }
+.eb-footer-logo .eb-y { color: #86B817; font-style: italic; }
+
+.eb-footer h6 {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 14px;
+}
+
+.eb-footer a {
+    color: #aaa;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 9px;
+    transition: color 0.15s;
+    font-size: 13px;
+}
+.eb-footer a:hover { color: #fff; }
+
+.eb-footer-bottom {
+    border-top: 1px solid #333;
+    padding: 16px 0;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+/* ============================================================
+   CATEGORY STRIP (below navbar)
+   ============================================================ */
+.eb-cat-strip {
+    background: var(--eb-white);
+    border-bottom: 1px solid var(--eb-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+.eb-cat-strip::-webkit-scrollbar { display: none; }
+
+.eb-cat-strip-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.eb-cat-link {
+    display: inline-block;
+    padding: 11px 14px;
+    font-size: 13px;
+    color: var(--eb-dark);
+    text-decoration: none !important;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.eb-cat-link:hover,
+.eb-cat-link.eb-cat-active {
+    color: var(--eb-blue);
+    border-bottom-color: var(--eb-blue);
+}
+
+/* ============================================================
+   PROMO BANNER CAROUSEL (eBay-style slideable hero)
+   ============================================================ */
+
+/* Carousel wrapper */
+.eb-hero-carousel {
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 6px 28px rgba(0,0,0,.16);
+    position: relative;
+}
+
+/* Each slide banner */
+.eb-hero-banner {
+    display: flex;
+    align-items: stretch;
+    min-height: 210px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Slide color themes */
+.eb-slide-purple { background: linear-gradient(130deg, #d8b4f0 0%, #b07ad4 45%, #8840ba 100%); }
+.eb-slide-blue   { background: linear-gradient(130deg, #93c5fd 0%, #4f8ef5 45%, #1d4ed8 100%); }
+.eb-slide-teal   { background: linear-gradient(130deg, #6ee7cb 0%, #14b8a6 45%, #0f766e 100%); }
+
+/* Left text block */
+.eb-hero-text {
+    flex: 1 1 260px;
+    padding: 36px 36px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+.eb-hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+.eb-hero-sub {
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 20px;
+    max-width: 300px;
+    opacity: .82;
+}
+.eb-hero-cta {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: opacity .15s, transform .15s;
+    align-self: flex-start;
+    color: #fff !important;
+}
+.eb-hero-cta:hover { opacity: .88; transform: translateY(-1px); }
+
+/* Slide 1 text colors (purple — dark text) */
+.eb-slide-purple .eb-hero-title { color: #1a0535; }
+.eb-slide-purple .eb-hero-sub   { color: rgba(30,5,60,.8); }
+.eb-slide-purple .eb-hero-cta   { background: #1a0535; }
+
+/* Slide 2 text colors (blue — dark text) */
+.eb-slide-blue .eb-hero-title { color: #0a1f5c; }
+.eb-slide-blue .eb-hero-sub   { color: rgba(10,30,90,.78); }
+.eb-slide-blue .eb-hero-cta   { background: #0a1f5c; }
+
+/* Slide 3 text colors (teal — dark text) */
+.eb-slide-teal .eb-hero-title { color: #012e28; }
+.eb-slide-teal .eb-hero-sub   { color: rgba(1,50,44,.78); }
+.eb-slide-teal .eb-hero-cta   { background: #012e28; }
+
+/* Center image-grid block */
+.eb-hero-images {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    padding: 18px 12px;
+    width: 240px;
+    align-self: center;
+}
+.eb-hero-img-card {
+    background: rgba(255,255,255,.88);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 76px;
+    font-size: 2.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.10);
+    transition: transform .18s;
+}
+.eb-hero-img-card:hover { transform: scale(1.06); }
+
+/* Icon colors per slide */
+.eb-slide-purple .eb-hero-img-card { color: #8840ba; }
+.eb-slide-blue   .eb-hero-img-card { color: #1d4ed8; }
+.eb-slide-teal   .eb-hero-img-card { color: #0f766e; }
+
+/* Right discount badge */
+.eb-hero-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 30px;
+    min-width: 130px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.eb-slide-purple .eb-hero-badge { background: rgba(45, 10, 80,  .82); }
+.eb-slide-blue   .eb-hero-badge { background: rgba(10, 25, 90,  .80); }
+.eb-slide-teal   .eb-hero-badge { background: rgba( 1, 40, 36,  .80); }
+
+.eb-hero-badge-label {
+    font-size: 11px;
+    color: rgba(255,255,255,.75);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.eb-hero-badge-amount {
+    font-size: 38px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+}
+.eb-hero-badge-amount sup {
+    font-size: 16px;
+    vertical-align: super;
+}
+.eb-hero-badge-off {
+    font-size: 18px;
+    font-weight: 800;
+    color: rgba(255,255,255,.9);
+    letter-spacing: 3px;
+    margin-top: 2px;
+}
+
+/* ---- Carousel controls ---- */
+.eb-hero-carousel .carousel-control-prev,
+.eb-hero-carousel .carousel-control-next {
+    width: 44px;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.eb-hero-carousel:hover .carousel-control-prev,
+.eb-hero-carousel:hover .carousel-control-next {
+    opacity: 1;
+}
+.eb-hero-carousel .carousel-control-prev-icon,
+.eb-hero-carousel .carousel-control-next-icon {
+    width: 28px;
+    height: 28px;
+    background-color: rgba(0,0,0,.35);
+    border-radius: 50%;
+    background-size: 14px;
+    padding: 6px;
+}
+
+/* ---- Carousel indicators (dots bottom-left) ---- */
+.eb-hero-carousel .carousel-indicators {
+    justify-content: flex-start;
+    left: 36px;
+    right: auto;
+    bottom: 14px;
+    margin: 0;
+}
+.eb-hero-carousel .carousel-indicators button {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(0,0,0,.3);
+    margin: 0 3px;
+    padding: 0;
+    flex: none;
+    opacity: 1;
+    transition: background .2s, transform .2s;
+}
+.eb-hero-carousel .carousel-indicators button.active {
+    background-color: rgba(0,0,0,.75);
+    transform: scale(1.25);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .eb-hero-images { display: none; }
+    .eb-hero-badge  { min-width: 96px; padding: 20px 16px; }
+    .eb-hero-badge-amount { font-size: 26px; }
+    .eb-hero-title  { font-size: 20px; }
+    .eb-hero-text   { padding: 28px 24px 40px; }
+}
+
+/* ============================================================
+   INDEX PAGE — FILTER BAR (redesigned)
+   ============================================================ */
+.eb-filter-bar {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+
+.eb-filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--eb-muted);
+    white-space: nowrap;
+}
+
+.eb-filter-select {
+    border: 1px solid var(--eb-border);
+    border-radius: 20px;
+    padding: 6px 14px 6px 12px;
+    font-size: 13px;
+    background: var(--eb-bg);
+    color: var(--eb-dark);
+    outline: none;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    min-width: 130px;
+}
+.eb-filter-select:hover,
+.eb-filter-select:focus {
+    border-color: var(--eb-blue);
+    background: #fff;
+}
+
+.eb-filter-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--eb-border);
+    flex-shrink: 0;
+}
+
+.eb-clear-btn {
+    background: none;
+    border: 1px solid var(--eb-border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--eb-muted);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+}
+.eb-clear-btn:hover {
+    border-color: var(--eb-red);
+    color: var(--eb-red);
+    background: #fff5f5;
+}
+
+.eb-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.eb-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--eb-dark);
+}
+
+.eb-results-count {
+    font-size: 13px;
+    color: var(--eb-muted);
+}
+
+/* ============================================================
+   PRODUCT CARDS (eBay style)
+   ============================================================ */
+.eb-card {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: box-shadow 0.18s, transform 0.18s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+.eb-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+    border-color: #c0c0c0;
+}
+
+.eb-card-img-wrap {
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid var(--eb-border);
+}
+.eb-card-img-wrap img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    display: block;
+    padding: 10px;
+    transition: transform 0.22s;
+}
+.eb-card:hover .eb-card-img-wrap img {
+    transform: scale(1.05);
+}
+
+.eb-card-body {
+    padding: 10px 12px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.eb-card-title {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--eb-dark);
+    margin-bottom: 6px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.eb-card-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.eb-card-price-alt {
+    font-size: 12px;
+    color: var(--eb-muted);
+    margin-bottom: 6px;
+}
+
+.eb-card-shipping {
+    font-size: 12px;
+    color: #0b6e4f;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.eb-card-seller {
+    font-size: 12px;
+    color: var(--eb-muted);
+    margin-bottom: 10px;
+}
+
+.eb-btn-buy {
+    display: block;
+    width: 100%;
+    background: var(--eb-blue);
+    color: white !important;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none !important;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: auto;
+}
+.eb-btn-buy:hover { background: #0057b8; color: white !important; }
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+.eb-pagination .page-link {
+    color: var(--eb-blue);
+    border: 1px solid var(--eb-border);
+    padding: 7px 14px;
+    font-size: 14px;
+    background: var(--eb-white);
+}
+.eb-pagination .page-item.active .page-link {
+    background: var(--eb-blue);
+    border-color: var(--eb-blue);
+    color: white;
+}
+.eb-pagination .page-link:hover {
+    background: #e8f0fd;
+    color: var(--eb-blue);
+}
+
+/* ============================================================
+   PRODUCT DETAIL (Order/Create)
+   ============================================================ */
+.eb-breadcrumb {
+    font-size: 13px;
+    color: var(--eb-muted);
+    padding: 10px 0 16px;
+}
+.eb-breadcrumb a {
+    color: var(--eb-blue);
+    text-decoration: none;
+}
+.eb-breadcrumb a:hover { text-decoration: underline; }
+.eb-breadcrumb .sep { margin: 0 6px; color: #ccc; }
+
+.eb-product-card {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.eb-product-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--eb-dark);
+    line-height: 1.35;
+    margin-bottom: 10px;
+}
+
+.eb-product-condition {
+    font-size: 13px;
+    color: var(--eb-muted);
+    margin-bottom: 12px;
+}
+.eb-product-condition strong { color: var(--eb-dark); }
+
+.eb-product-price {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    margin-bottom: 3px;
+}
+
+.eb-product-price-sub {
+    font-size: 13px;
+    color: var(--eb-muted);
+    margin-bottom: 12px;
+}
+
+.eb-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #0b6e4f;
+    font-weight: 600;
+    background: #e8f8f0;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+}
+
+.eb-rating-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #8a5e00;
+    background: #fff8e1;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-left: 8px;
+    margin-bottom: 18px;
+}
+
+.eb-form-section {
+    border-top: 1px solid var(--eb-border);
+    padding-top: 18px;
+    margin-top: 4px;
+}
+
+.eb-form-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.eb-form-control {
+    border: 1px solid #c7c7c7;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    background: #fff;
+}
+.eb-form-control:focus {
+    border-color: var(--eb-blue);
+    box-shadow: 0 0 0 2px rgba(0,100,210,0.12);
+}
+
+.eb-btn-order {
+    display: block;
+    width: 100%;
+    background: #86B817;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 13px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 10px;
+    text-align: center;
+    text-decoration: none;
+}
+.eb-btn-order:hover { background: #6ea010; color: white; }
+
+.eb-btn-outline {
+    display: block;
+    width: 100%;
+    background: white;
+    color: var(--eb-blue);
+    border: 2px solid var(--eb-blue);
+    border-radius: 24px;
+    padding: 11px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    text-decoration: none !important;
+}
+.eb-btn-outline:hover {
+    background: var(--eb-blue);
+    color: white !important;
+}
+
+.eb-thumb-strip {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.eb-thumb {
+    width: 68px;
+    height: 68px;
+    object-fit: cover;
+    border: 2px solid var(--eb-border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+.eb-thumb:hover,
+.eb-thumb.eb-thumb-active {
+    border-color: var(--eb-blue);
+}
+
+.eb-sidebar-card {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+.eb-sidebar-card h6 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--eb-border);
+}
+.eb-seller-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--eb-blue);
+    margin-bottom: 4px;
+}
+.eb-seller-meta {
+    font-size: 12px;
+    color: var(--eb-muted);
+    margin-bottom: 4px;
+}
+.eb-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--eb-muted);
+    margin-bottom: 10px;
+}
+.eb-info-row i {
+    margin-top: 2px;
+    color: var(--eb-blue);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+.eb-login-page {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    background: var(--eb-bg);
+}
+
+.eb-login-card {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 10px;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+}
+
+.eb-login-logo {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: block;
+    text-decoration: none !important;
+}
+.eb-login-logo .eb-e { color: #E53238; font-style: italic; }
+.eb-login-logo .eb-b { color: #0064D2; font-style: italic; }
+.eb-login-logo .eb-a { color: #F5AF02; font-style: italic; }
+.eb-login-logo .eb-y { color: #86B817; font-style: italic; }
+
+.eb-login-title {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--eb-dark);
+    margin-bottom: 4px;
+}
+.eb-login-sub {
+    font-size: 14px;
+    color: var(--eb-muted);
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.eb-login-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.eb-login-input {
+    border: 1px solid #c7c7c7;
+    border-radius: 6px;
+    padding: 11px 14px;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    background: #fff;
+    margin-bottom: 0;
+}
+.eb-login-input:focus {
+    border-color: var(--eb-blue);
+    box-shadow: 0 0 0 2px rgba(0,100,210,0.15);
+}
+
+.eb-btn-login {
+    background: var(--eb-blue);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 13px;
+    font-size: 16px;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 8px;
+}
+.eb-btn-login:hover { background: #0057b8; }
+
+.eb-login-divider {
+    text-align: center;
+    font-size: 13px;
+    color: var(--eb-muted);
+    margin: 18px 0;
+    position: relative;
+}
+.eb-login-divider::before,
+.eb-login-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--eb-border);
+}
+.eb-login-divider::before { left: 0; }
+.eb-login-divider::after { right: 0; }
+
+/* ============================================================
+   ADMIN PAGES
+   ============================================================ */
+.eb-admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.eb-admin-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--eb-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.eb-admin-card {
+    background: var(--eb-white);
+    border: 1px solid var(--eb-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.eb-admin-card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--eb-border);
+    font-weight: 700;
+    font-size: 14px;
+    background: #fafafa;
+    color: var(--eb-dark);
+}
+.eb-admin-card-body { padding: 20px; }
+
+.eb-table { width: 100%; border-collapse: collapse; }
+.eb-table thead th {
+    background: #f5f5f5;
+    border-bottom: 2px solid var(--eb-border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--eb-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+.eb-table tbody td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+.eb-table tbody tr:last-child td { border-bottom: none; }
+.eb-table tbody tr:hover { background: #fafafa; }
+
+/* Status badges */
+.eb-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.eb-badge-pending  { background: #fff3cd; color: #856404; }
+.eb-badge-paid     { background: #cff4fc; color: #055160; }
+.eb-badge-shipping { background: #cfe2ff; color: #084298; }
+.eb-badge-done     { background: #d1e7dd; color: #0a3622; }
+.eb-badge-cancel   { background: #f8d7da; color: #842029; }
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.text-eb-blue   { color: var(--eb-blue) !important; }
+.text-eb-red    { color: var(--eb-red) !important; }
+.text-eb-green  { color: var(--eb-green) !important; }
+.text-eb-muted  { color: var(--eb-muted) !important; }
+.bg-eb-light    { background: var(--eb-bg) !important; }
+
+/* Remove default mb-3 from navbar */
+.eb-navbar + * { margin-top: 0; }

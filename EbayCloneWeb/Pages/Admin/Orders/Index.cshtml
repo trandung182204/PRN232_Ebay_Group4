@@ -4,154 +4,123 @@
     ViewData["Title"] = "Order Management";
 }
 
-<div class="container mt-4">
+<div class="container-fluid px-4 py-4" style="max-width:1400px;margin:0 auto;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">
-            <i class="bi bi-list-check text-primary"></i>
+    <div class="eb-admin-header">
+        <div class="eb-admin-title">
+            <i class="bi bi-list-check text-eb-blue"></i>
             Order Management
-        </h2>
+        </div>
     </div>
 
     <!-- Filter -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <form method="get" class="row g-2 align-items-center">
-
-                <div class="col-md-4">
-                    <select name="status" class="form-select">
-                        <option value="">All Status</option>
-                        <option>PendingPayment</option>
-                        <option>Paid</option>
-                        <option>Shipping</option>
-                        <option>Delivered</option>
-                        <option>Cancelled</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100">
-                        <i class="bi bi-funnel"></i> Filter
-                    </button>
-                </div>
-
+    <div class="eb-admin-card mb-4">
+        <div class="eb-admin-card-header">
+            <i class="bi bi-funnel me-2"></i>Filter orders
+        </div>
+        <div class="eb-admin-card-body">
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+                <select name="status" class="form-select form-select-sm" style="width:auto;min-width:180px;">
+                    <option value="">All Statuses</option>
+                    <option>PendingPayment</option>
+                    <option>Paid</option>
+                    <option>Shipping</option>
+                    <option>Delivered</option>
+                    <option>Cancelled</option>
+                </select>
+                <button class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="bi bi-funnel"></i> Apply filter
+                </button>
             </form>
-
         </div>
     </div>
 
     <!-- Table -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-
+    <div class="eb-admin-card">
+        <div class="eb-admin-card-body p-0">
             <div class="table-responsive">
-
-                <table class="table table-hover align-middle">
-
-                    <thead class="table-dark">
+                <table class="eb-table">
+                    <thead>
                         <tr>
-                            <th>OrderId</th>
+                            <th>Order ID</th>
                             <th>Date</th>
                             <th>Total</th>
                             <th>Status</th>
-                            <th width="240">Action</th>
+                            <th style="width:220px;">Action</th>
                         </tr>
                     </thead>
-
                     <tbody>
-
                         @foreach (var o in Model.Orders)
                         {
                             <tr>
-
                                 <td>
                                     <a asp-page="/Admin/Orders/Detail" asp-route-id="@o.Id"
-                                           class="fw-bold text-decoration-none">
+                                       class="fw-bold text-decoration-none text-eb-blue">
                                         #@o.Id
                                     </a>
                                 </td>
-
-                                <td>
+                                <td class="text-muted">
                                     @o.OrderDate.ToString("yyyy-MM-dd HH:mm")
                                 </td>
-
                                 <td>
-                                    <span class="text-danger fw-bold">
-                                        $@o.TotalPrice
+                                    <span class="fw-bold" style="color:var(--eb-red)">
+                                        US $@o.TotalPrice
                                     </span>
                                 </td>
-
-                                <!-- STATUS BADGE -->
                                 <td>
-
                                     @if (o.Status == "PendingPayment")
                                     {
-                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        <span class="eb-badge eb-badge-pending">Pending</span>
                                     }
                                     else if (o.Status == "Paid")
                                     {
-                                        <span class="badge bg-info text-dark">Paid</span>
+                                        <span class="eb-badge eb-badge-paid">Paid</span>
                                     }
                                     else if (o.Status == "Shipping")
                                     {
-                                        <span class="badge bg-primary">Shipping</span>
+                                        <span class="eb-badge eb-badge-shipping">Shipping</span>
                                     }
                                     else if (o.Status == "Delivered")
                                     {
-                                        <span class="badge bg-success">Delivered</span>
+                                        <span class="eb-badge eb-badge-done">Delivered</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">Cancelled</span>
+                                        <span class="eb-badge eb-badge-cancel">Cancelled</span>
                                     }
-
                                 </td>
-
-                                <!-- ACTION DROPDOWN -->
                                 <td>
-
-                                    <select class="form-select form-select-sm"                                       onchange="updateStatus(@o.Id,this.value)">
-
+                                    <select class="form-select form-select-sm rounded-pill"
+                                            onchange="updateStatus(@o.Id, this.value)">
                                         @if (o.Status == "PendingPayment")
                                         {
                                             <option value="">Select action</option>
-                                            <option value="Paid">Paid</option>
-                                            <option value="Cancelled">Cancelled</option>
-                                            <option value="Failed">Failed</option>
+                                            <option value="Paid">Mark as Paid</option>
+                                            <option value="Cancelled">Cancel order</option>
+                                            <option value="Failed">Mark as Failed</option>
                                         }
-
                                         else if (o.Status == "Paid")
                                         {
                                             <option value="">Select action</option>
-                                            <option value="Shipping">Shipping</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Shipping">Ship order</option>
+                                            <option value="Cancelled">Cancel order</option>
                                         }
-
                                         else if (o.Status == "Shipping")
                                         {
                                             <option value="">Select action</option>
-                                            <option value="Delivered">Delivered</option>
+                                            <option value="Delivered">Mark delivered</option>
                                         }
-
                                         else
                                         {
                                             <option selected disabled>No actions</option>
                                         }
-
                                     </select>
-
                                 </td>
-
                             </tr>
                         }
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
     </div>
 

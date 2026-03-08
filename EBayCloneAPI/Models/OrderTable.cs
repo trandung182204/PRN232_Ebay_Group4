@@ -24,7 +24,7 @@ public partial class OrderTable
     public DateTime? OrderDate { get; set; }
 
     [Column("totalPrice", TypeName = "decimal(10, 2)")]
-    public decimal? TotalPrice { get; set; }
+    public decimal TotalPrice { get; set; }
 
     [Column("status")]
     public OrderStatus Status { get; set; }

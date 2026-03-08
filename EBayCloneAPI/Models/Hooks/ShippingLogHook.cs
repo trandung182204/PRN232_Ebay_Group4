@@ -5,25 +5,10 @@ namespace EBayAPI.Models.Hooks
 {
     public class ShippingLogHook : IShippingEventHook
     {
-        private readonly ApplicationDbContext _db;
-
-        public ShippingLogHook(ApplicationDbContext db)
+        public Task OnShipmentCreated(int orderId, string trackingCode)
         {
-            _db = db;
-        }
-
-        public async Task OnShipmentCreatedAsync(OrderTable order, string trackingNumber)
-        {
-            _db.SystemLogs.Add(new SystemLog
-            {
-                Module = "Shipping",
-                Action = "ShipmentCreated",
-                Status = "Success",
-                ErrorMessage = null,
-                Timestamp = DateTime.UtcNow
-            });
-
-            await _db.SaveChangesAsync();
+            Console.WriteLine($"[HOOK] Shipment created: {trackingCode} for order {orderId}");
+            return Task.CompletedTask;
         }
     }
 }
