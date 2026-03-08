@@ -14,6 +14,18 @@ namespace EbayCloneWeb.Pages.Order
         private readonly IHttpClientFactory _factory;
         private readonly string _secretKey;
 
+<<<<<<< HEAD
+        [BindProperty]
+        public int ProductId { get; set; }
+        [BindProperty]
+        public int Quantity { get; set; } = 1;
+        [BindProperty]
+        public string Region { get; set; } = "hanoi";
+        [BindProperty]
+        public string PaymentMethod { get; set; } = "PayPal";
+        [BindProperty]
+        public string? Address { get; set; }
+=======
         public CreateModel(IHttpClientFactory factory, IConfiguration config)
         {
             _factory = factory;
@@ -25,6 +37,7 @@ namespace EbayCloneWeb.Pages.Order
         [BindProperty] public string Region { get; set; } = "north";
         [BindProperty] public string PaymentMethod { get; set; } = "PAYPAL";
         [BindProperty] public string? Address { get; set; }
+>>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
 
         public ProductDto? Product { get; set; }
         public List<string> ImagesList { get; set; } = new List<string>();

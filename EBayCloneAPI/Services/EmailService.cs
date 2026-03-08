@@ -14,6 +14,13 @@ public sealed class EmailService : IEmailService
     private readonly EmailSettings _cfg;
     private readonly ILogger<EmailService> _logger;
 
+    private static readonly TimeZoneInfo _hanoiTz =
+        TimeZoneInfo.FindSystemTimeZoneById(
+            OperatingSystem.IsWindows() ? "SE Asia Standard Time" : "Asia/Bangkok");
+
+    private static string Hanoi(DateTime utc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(utc, _hanoiTz).ToString("yyyy-MM-dd HH:mm") + " (GMT+7)";
+
     public EmailService(IOptions<EmailSettings> options, ILogger<EmailService> logger)
     {
         _cfg    = options.Value;
@@ -64,7 +71,7 @@ public sealed class EmailService : IEmailService
                           <td style="font-size:26px;color:#0064D2;padding-right:12px;line-height:1;vertical-align:middle;">&#128230;</td>
                           <td>
                             <div style="font-size:17px;font-weight:700;color:#0a1f5c;">Order Placed Successfully!</div>
-                            <div style="font-size:13px;color:#555;margin-top:3px;">Order #{data.OrderId} &bull; {data.OrderDate:yyyy-MM-dd HH:mm} UTC</div>
+                            <div style="font-size:13px;color:#555;margin-top:3px;">Order #{data.OrderId} &bull; {Hanoi(data.OrderDate)}</div>
                           </td>
                         </tr>
                       </table>
@@ -239,7 +246,7 @@ public sealed class EmailService : IEmailService
                         </tr>
                         <tr>
                           <td style="padding:10px 16px;font-size:13px;color:#767676;">Paid At</td>
-                          <td style="padding:10px 16px;font-size:13px;font-weight:600;color:#333;">{data.PaidAt:yyyy-MM-dd HH:mm} UTC</td>
+                          <td style="padding:10px 16px;font-size:13px;font-weight:600;color:#333;">{Hanoi(data.PaidAt)}</td>
                         </tr>
                         <tr>
                           <td style="padding:10px 16px;font-size:13px;color:#767676;">Order ID</td>
@@ -341,7 +348,7 @@ public sealed class EmailService : IEmailService
                         </tr>
                         <tr>
                           <td style="padding:10px 16px;font-size:13px;color:#767676;">Updated At</td>
-                          <td style="padding:10px 16px;font-size:13px;color:#555;">{data.ChangedAt:yyyy-MM-dd HH:mm} UTC</td>
+                          <td style="padding:10px 16px;font-size:13px;color:#555;">{Hanoi(data.ChangedAt)}</td>
                         </tr>
                       </table>
 

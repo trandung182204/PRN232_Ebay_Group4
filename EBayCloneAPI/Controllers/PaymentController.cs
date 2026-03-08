@@ -68,39 +68,75 @@ public class PaymentController : ControllerBase
         if (payment == null)
             return BadRequest("Payment not found");
 
-        var provider = _paymentService.GetProvider("PAYPAL");
+        var baseUrl = _config["Frontend:BaseUrl"];
 
-        await provider.ConfirmPayment(payment.Id);
+        try
+        {
+            var provider = _paymentService.GetProvider("PAYPAL");
+            await provider.ConfirmPayment(payment.Id);
 
-        // Publish OrderPaidEvent để gửi mail xác nhận thanh toán
-        var order = await _context.OrderTables.FindAsync(payment.OrderId);
+            // Publish OrderPaidEvent → gửi mail xác nhận thanh toán
+            var order = await _context.OrderTables.FindAsync(payment.OrderId);
+            var buyer = order != null ? await _context.Users.FindAsync(order.BuyerId) : null;
+
+            if (order != null && buyer != null && !string.IsNullOrEmpty(buyer.Email))
+            {
+                var items = await _context.OrderItems
+                    .Include(i => i.Product)
+                    .Where(i => i.OrderId == order.Id)
+                    .ToListAsync();
+
+                await _eventBus.PublishAsync(new OrderPaidEvent
+                {
+                    OrderId       = order.Id,
+                    BuyerEmail    = buyer.Email,
+                    BuyerName     = buyer.Username ?? "Customer",
+                    TotalPrice    = order.TotalPrice,
+                    PaymentMethod = "PAYPAL",
+                    PaidAt        = DateTime.UtcNow,
+                    Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
+                    {
+                        ProductName = i.Product?.Title ?? "Product",
+                        Quantity    = i.Quantity ?? 1,
+                        UnitPrice   = i.UnitPrice ?? 0
+                    }).ToList()
+                });
+            }
+
+            return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
+        }
+        catch
+        {
+            // Capture thất bại (ví dụ: không đủ tiền) → gửi mail thất bại
+            await PublishPaymentFailedAsync(payment.OrderId, "PendingPayment", "Failed");
+            return Redirect($"{baseUrl}/Payment/PaymentFailed?orderId={payment.OrderId}");
+        }
+    }
+    private async Task PublishPaymentFailedAsync(int? orderId, string oldStatus, string newStatus)
+    {
+        if (orderId == null) return;
+
+        var order = await _context.OrderTables.FindAsync(orderId);
         var buyer = order != null ? await _context.Users.FindAsync(order.BuyerId) : null;
 
-        if (order != null && buyer != null && !string.IsNullOrEmpty(buyer.Email))
+        if (order == null || buyer == null || string.IsNullOrEmpty(buyer.Email)) return;
+
+        await _eventBus.PublishAsync(new OrderStatusChangedEvent
         {
-            var items = await _context.OrderItems
-                .Include(i => i.Product)
-                .Where(i => i.OrderId == order.Id)
-                .ToListAsync();
-
-            await _eventBus.PublishAsync(new OrderPaidEvent
-            {
-                OrderId       = order.Id,
-                BuyerEmail    = buyer.Email,
-                BuyerName     = buyer.Username ?? "Customer",
-                TotalPrice    = order.TotalPrice,
-                PaymentMethod = "PAYPAL",
-                PaidAt        = DateTime.UtcNow,
-                Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
-                {
-                    ProductName = i.Product?.Title ?? "Product",
-                    Quantity    = i.Quantity ?? 1,
-                    UnitPrice   = i.UnitPrice ?? 0
-                }).ToList()
-            });
-        }
-
+            OrderId    = order.Id,
+            BuyerEmail = buyer.Email,
+            BuyerName  = buyer.Username ?? "Customer",
+            OldStatus  = oldStatus,
+            NewStatus  = newStatus,
+            TotalPrice = order.TotalPrice,
+            ChangedAt  = DateTime.UtcNow
+        });
+    }
+    
+    [HttpGet("paypal-cancel")]
+    public IActionResult PaypalCancel()
+    {
         var baseUrl = _config["Frontend:BaseUrl"];
-        return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");
+        return Redirect($"{baseUrl}/Payment/PaymentCancel");
     }
 }
