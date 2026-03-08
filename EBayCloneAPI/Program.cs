@@ -96,7 +96,6 @@ namespace EBayCloneAPI
             builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, EBayCloneAPI.Services.PaymentService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
-            builder.Services.AddScoped<IPaymentEventHook, PaymentLogHook>();
             builder.Services.AddScoped<IPaymentEventHook, PaymentEmailHook>();
             builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
@@ -109,11 +108,6 @@ namespace EBayCloneAPI
 
             builder.Services.AddSingleton<PluginManager>();
             builder.Services.AddSingleton<IShippingHook, VNPostShippingPlugin>();
-
-            builder.Services.AddScoped<IPaymentEventHook, PaymentLogHook>();
-            builder.Services.AddScoped<IPaymentEventHook, PaymentEmailHook>();
-
-            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
             // ── KAN-18: Event Bus (singleton; uses IServiceScopeFactory internally) ──
             builder.Services.AddSingleton<IEventBus, EventBus>();
