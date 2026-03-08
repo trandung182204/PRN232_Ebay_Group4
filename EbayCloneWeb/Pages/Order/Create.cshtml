@@ -33,65 +33,6 @@
                                          style="object-fit:contain;height:360px;max-width:100%;" />
                                 </div>
                             }
-<<<<<<< HEAD
-                            else
-                            {
-                                <img src="/images/placeholder.png" class="img-fluid" style="height:400px;object-fit:contain" />
-                            }
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <h2>@Model.Product?.Title</h2>
-                            <p class="text-muted">@Model.Product?.Description</p>
-                            <h4 class="text-danger">$@string.Format("{0:0.00}", Model.Product?.Price ?? 0)</h4>
-
-                            <div class="mb-3">
-                                <span class="badge bg-success">In stock</span>
-                                <span class="ms-2">? @Model.AvgRating.ToString("0.0")</span>
-                            </div>
-
-                            <form method="post">
-                                <input type="hidden" asp-for="ProductId" />
-                                <div class="row g-2 mb-3">
-                                    <div class="col-4">
-                                        <label class="form-label small">Quantity</label>
-                                        <input asp-for="Quantity" class="form-control" />
-                                    </div>
-                                    <div class="col-8">
-                                        <label class="form-label small">Khu vực giao hàng (phí ship)</label>
-                                        <select asp-for="Region" class="form-select" id="regionSelect">
-                                            <option value="hanoi">Hà Nội (20k)</option>
-                                            <option value="mienbac">Miền Bắc (30k)</option>
-                                            <option value="mientrung">Miền Trung (40k)</option>
-                                            <option value="miennam">Miền Nam (50k)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-2 small text-muted" id="shippingSummary">
-                                    Phí ship: <span id="shippingFee">20</span>k — Tổng ước tính: <span id="totalEstimate">—</span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small">Shipping address</label>
-                                    <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter shipping address"></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small">Payment Method</label>
-                                    <select asp-for="PaymentMethod" class="form-select">
-                                        <option>PayPal</option>
-                                        <option>COD</option>
-                                    </select>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-primary btn-lg">Place Order</button>
-                                    <a asp-page="/Index" class="btn btn-outline-secondary">Continue shopping</a>
-                                </div>
-                            </form>
-=======
->>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
                         </div>
                         @if (Model.ImagesList.Count > 1)
                         {
@@ -215,14 +156,6 @@
                 </div>
             </div>
 
-<<<<<<< HEAD
-            <div class="card shadow-sm">
-                <div class="card-body small text-muted">
-                    <h6>Shipping</h6>
-                    <p>Phí theo khu vực (hiển thị bên trái). Giao hàng ước tính 3-7 ngày.</p>
-                    <h6>Returns</h6>
-                    <p>30-day return policy.</p>
-=======
             <!-- Shipping info -->
             <div class="eb-sidebar-card">
                 <h6><i class="bi bi-truck me-2 text-eb-blue"></i>Shipping</h6>
@@ -233,7 +166,6 @@
                 <div class="eb-info-row">
                     <i class="bi bi-geo-alt"></i>
                     <span>Ships within Vietnam.</span>
->>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
                 </div>
             </div>
 
@@ -254,24 +186,3 @@
     </div>
 
 </div>
-<script>
-    (function () {
-        var price = @(Model.Product?.Price ?? 0);
-        var fees = { hanoi: 20, mienbac: 30, mientrung: 40, miennam: 50 };
-        function update() {
-            var qty = parseInt(document.querySelector('input[name="Quantity"]')?.value || 1, 10);
-            var region = document.getElementById('regionSelect')?.value || 'hanoi';
-            var fee = fees[region] || 50;
-            var subtotal = price * qty;
-            var total = subtotal + fee;
-            var feeEl = document.getElementById('shippingFee');
-            var totalEl = document.getElementById('totalEstimate');
-            if (feeEl) feeEl.textContent = fee;
-            if (totalEl) totalEl.textContent = total + 'k';
-        }
-        document.getElementById('regionSelect')?.addEventListener('change', update);
-        document.querySelector('input[name="Quantity"]')?.addEventListener('input', update);
-        document.querySelector('input[name="Quantity"]')?.addEventListener('change', update);
-        update();
-    })();
-</script>

@@ -38,15 +38,15 @@ namespace EBayCloneAPI.Services
             IEnumerable<IShippingEventHook> shippingHooks,
             IEnumerable<IPaymentEventHook> paymentHooks)
         {
-            _db           = db;
-            _payment      = payment;
-            _shipping     = shipping;
-            _email        = email;
-            _eventBus     = eventBus;
-            _logger       = logger;
-            _settings     = options.Value;
+            _db = db;
+            _payment = payment;
+            _shipping = shipping;
+            _email = email;
+            _eventBus = eventBus;
+            _logger = logger;
+            _settings = options.Value;
             _shippingHooks = shippingHooks;
-            _paymentHooks  = paymentHooks;
+            _paymentHooks = paymentHooks;
         }
 
         public async Task<OrderTable> CreateOrderAsync(
@@ -58,33 +58,25 @@ namespace EBayCloneAPI.Services
             string? region)
         {
             // Apply defaults for optional fields
-            addressText   = string.IsNullOrWhiteSpace(addressText)   ? "Not specified"  : addressText.Trim();
-            paymentMethod = string.IsNullOrWhiteSpace(paymentMethod) ? "COD"            : paymentMethod.Trim();
-            region        = string.IsNullOrWhiteSpace(region)        ? "north"          : region.Trim().ToLower();
+            addressText = string.IsNullOrWhiteSpace(addressText) ? "Not specified" : addressText.Trim();
+            paymentMethod = string.IsNullOrWhiteSpace(paymentMethod) ? "COD" : paymentMethod.Trim();
+            region = string.IsNullOrWhiteSpace(region) ? "north" : region.Trim().ToLower();
 
             var product = await _db.Products.FindAsync(productId);
 
             if (product == null)
                 throw new ArgumentException("Product not found");
 
-            // 1️⃣ Create Address from text (State dùng luôn để lưu region, không cần cột mới)
+            // 1️⃣ Create Address from text
             var address = new Address
             {
-<<<<<<< HEAD
                 UserId = userId,
                 Street = addressText,
                 City = "Unknown",
-                State = region,
+                State = "Unknown",
                 Country = "Unknown",
-=======
-                UserId   = userId,
-                Street   = addressText,
-                City     = "Unknown",
-                State    = "Unknown",
-                Country  = "Unknown",
->>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
                 FullName = "Customer",
-                Phone    = "Unknown",
+                Phone = "Unknown",
                 IsDefault = false
             };
 
@@ -92,16 +84,16 @@ namespace EBayCloneAPI.Services
             await _db.SaveChangesAsync();
 
             decimal productTotal = (product.Price ?? 0) * quantity;
-            decimal shippingFee  = CalculateShippingFee(region);
-            decimal total        = productTotal + shippingFee;
+            decimal shippingFee = CalculateShippingFee(region);
+            decimal total = productTotal + shippingFee;
 
             // 2️⃣ Create Order
             var order = new OrderTable
             {
-                BuyerId   = userId,
+                BuyerId = userId,
                 AddressId = address.Id,
                 OrderDate = DateTime.UtcNow,
-                Status    = EBayAPI.Enums.OrderStatus.PendingPayment,
+                Status = EBayAPI.Enums.OrderStatus.PendingPayment,
                 TotalPrice = total
             };
 
@@ -111,9 +103,9 @@ namespace EBayCloneAPI.Services
             // 3️⃣ Create OrderItem
             var item = new OrderItem
             {
-                OrderId   = order.Id,
+                OrderId = order.Id,
                 ProductId = productId,
-                Quantity  = quantity,
+                Quantity = quantity,
                 UnitPrice = product.Price ?? 0
             };
 
@@ -123,11 +115,11 @@ namespace EBayCloneAPI.Services
             var payment = new Payment
             {
                 OrderId = order.Id,
-                UserId  = userId,
-                Amount  = total,
-                Method  = paymentMethod,
-                Status  = OrderStatus.PendingPayment,
-                PaidAt  = null
+                UserId = userId,
+                Amount = total,
+                Method = paymentMethod,
+                Status = OrderStatus.PendingPayment,
+                PaidAt = null
             };
 
             _db.Payments.Add(payment);
@@ -149,7 +141,7 @@ namespace EBayCloneAPI.Services
             string authToken,
             string secureKey)
         {
-            var order = await _db.OrderTables.Include(o => o.Address).FirstOrDefaultAsync(o => o.Id == orderId);
+            var order = await _db.OrderTables.FindAsync(orderId);
 
             if (order == null || order.Status != EBayAPI.Enums.OrderStatus.PendingPayment)
                 return false;
@@ -165,146 +157,28 @@ namespace EBayCloneAPI.Services
             var payment = new Payment
             {
                 OrderId = order.Id,
-                UserId  = order.BuyerId,
-                Amount  = order.TotalPrice,
-                Method  = paymentMethod,
-                Status  = OrderStatus.Paid,
-                PaidAt  = paidAt
+                UserId = order.BuyerId,
+                Amount = order.TotalPrice,
+                Method = paymentMethod,
+                Status = OrderStatus.Paid,
+                PaidAt = paidAt
             };
 
             _db.Payments.Add(payment);
             order.Status = EBayAPI.Enums.OrderStatus.Paid;
             await _db.SaveChangesAsync();
 
-<<<<<<< HEAD
-            // Khi Paid → auto create shipment (region lấy từ Address.State; dùng key nội bộ cho shipping)
-            var region = order.Address?.State ?? "north";
-            var (shipSuccess, trackingCode) = await _shipping.CreateShipmentAsync(order.Id, region, authToken, "SHIP_SECURE_456");
-            if (shipSuccess && !string.IsNullOrEmpty(trackingCode))
-            {
-                _db.ShippingInfos.Add(new ShippingInfo
-                {
-                    OrderId = order.Id,
-                    Carrier = "FakeCarrier",
-                    TrackingNumber = trackingCode,
-                    Status = "Pending",
-                    EstimatedArrival = DateTime.UtcNow.AddDays(3)
-                });
-                order.Status = OrderStatus.Shipping;
-                await _db.SaveChangesAsync();
-                foreach (var hook in _shippingHooks)
-                    await hook.OnShipmentCreatedAsync(order, trackingCode);
-                _logger.LogInformation("Order {OrderId} shipment created, tracking {TrackingCode}", order.Id, trackingCode);
-            }
-=======
             // ── KAN-16 / KAN-18: Publish OrderPaidEvent ──────────────────
             await PublishOrderPaidEventAsync(order, paymentMethod, paidAt);
->>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
 
             return true;
         }
 
-<<<<<<< HEAD
-
-
-        public async Task CancelUnpaidOrdersAsync()
-        {
-            var cutoff = DateTime.UtcNow.AddMinutes(-_settings.PaymentTimeoutMinutes);
-
-            // Get candidates first (Id + BuyerId) to avoid loading full entities
-            var candidates = await _db.OrderTables
-                .Where(o => o.Status == OrderStatus.PendingPayment
-                            && o.OrderDate != null && o.OrderDate <= cutoff)
-                .Select(o => new { o.Id, o.BuyerId })
-                .ToListAsync();
-
-            int cancelled = 0;
-            foreach (var c in candidates)
-            {
-                // Atomic DB-side update: set status to Cancelled only if still PendingPayment
-                var affected = await _db.OrderTables
-                    .Where(o => o.Id == c.Id && o.Status == OrderStatus.PendingPayment)
-                    .ExecuteUpdateAsync(s => s.SetProperty(o => o.Status, OrderStatus.Cancelled));
-
-                if (affected == 1)
-                {
-                    cancelled++;
-                    _logger.LogInformation("Auto-cancelling order {orderId}", c.Id);
-
-                    if (c.BuyerId != null)
-                    {
-                        var user = await _db.Users.FindAsync(c.BuyerId);
-                        if (user != null && !string.IsNullOrEmpty(user.Email))
-                        {
-                            await _email.SendOrderStatusChangeAsync(user.Email, c.Id.ToString(), "Cancelled");
-                        }
-                    }
-                }
-            }
-
-            _logger.LogInformation("AutoCancel completed. {count} orders cancelled", cancelled);
-        }
-
-        private decimal CalculateShippingFee(string region)
-        {
-            // Phí ship theo khu vực (VN, đơn vị nghìn VND)
-            return (region ?? "").ToLowerInvariant() switch
-            {
-                "hanoi" or "hà nội" or "ha noi" => 20,
-                "mienbac" or "miền bắc" or "mien bac" or "north" => 30,
-                "mientrung" or "miền trung" or "mien trung" or "central" => 40,
-                "miennam" or "miền nam" or "mien nam" or "south" => 50,
-                _ => 50,
-            };
-        }
-        public async Task<OrderTable?> GetOrderDetailAsync(int id)
-        {
-            return await _db.OrderTables
-                .Include(o => o.OrderItems)
-                .ThenInclude(i => i.Product)
-                .Include(o => o.Payments)
-                .Include(o => o.ShippingInfos)
-                .FirstOrDefaultAsync(o => o.Id == id);
-        }
-        public async Task<object> GetOrdersAsync(int page, int pageSize, OrderStatus? status)
-        {
-            var query = _db.OrderTables.AsQueryable();
-
-            if (status != null)
-                query = query.Where(o => o.Status == status);
-
-            var total = await query.CountAsync();
-
-            var orders = await query
-                .OrderByDescending(o => o.OrderDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(o => new
-                {
-                    o.Id,
-                    o.OrderDate,
-                    o.TotalPrice,
-                    o.Status,
-                    Buyer = o.BuyerId
-                })
-                .ToListAsync();
-
-            return new
-            {
-                page,
-                pageSize,
-                total,
-                data = orders
-            };
-        }
-        public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus newStatus)
-=======
         /// <summary>
         /// Updates order status. Publishes OrderStatusChangedEvent for
         /// Delivered and Failed transitions (KAN-17 / KAN-18).
         /// </summary>
         public async Task<bool> UpdateOrderStatusAsync(int orderId, EBayAPI.Enums.OrderStatus newStatus)
->>>>>>> bdc90dd1754ca98231229775d7c8fe8bcf29e5c1
         {
             var order = await _db.OrderTables.FindAsync(orderId);
 
@@ -377,13 +251,13 @@ namespace EBayCloneAPI.Services
                             // Publish via event bus so the email handler fires
                             await _eventBus.PublishAsync(new OrderStatusChangedEvent
                             {
-                                OrderId    = c.Id,
+                                OrderId = c.Id,
                                 BuyerEmail = user.Email,
-                                BuyerName  = user.Username ?? "Customer",
-                                OldStatus  = EBayAPI.Enums.OrderStatus.PendingPayment.ToString(),
-                                NewStatus  = "Cancelled",
+                                BuyerName = user.Username ?? "Customer",
+                                OldStatus = EBayAPI.Enums.OrderStatus.PendingPayment.ToString(),
+                                NewStatus = "Cancelled",
                                 TotalPrice = c.TotalPrice,
-                                ChangedAt  = DateTime.UtcNow
+                                ChangedAt = DateTime.UtcNow
                             });
                         }
                     }
@@ -409,7 +283,7 @@ namespace EBayCloneAPI.Services
             if (status != null)
                 query = query.Where(o => o.Status == status);
 
-            var total  = await query.CountAsync();
+            var total = await query.CountAsync();
             var orders = await query
                 .OrderByDescending(o => o.OrderDate)
                 .Skip((page - 1) * pageSize)
@@ -442,18 +316,18 @@ namespace EBayCloneAPI.Services
 
                 await _eventBus.PublishAsync(new OrderCreatedEvent
                 {
-                    OrderId         = order.Id,
-                    BuyerEmail      = buyer.Email,
-                    BuyerName       = buyer.Username ?? "Customer",
-                    ProductName     = product.Title ?? "Product",
-                    Quantity        = quantity,
-                    UnitPrice       = product.Price ?? 0,
-                    ShippingFee     = shippingFee,
-                    TotalPrice      = order.TotalPrice,
-                    PaymentMethod   = paymentMethod,
+                    OrderId = order.Id,
+                    BuyerEmail = buyer.Email,
+                    BuyerName = buyer.Username ?? "Customer",
+                    ProductName = product.Title ?? "Product",
+                    Quantity = quantity,
+                    UnitPrice = product.Price ?? 0,
+                    ShippingFee = shippingFee,
+                    TotalPrice = order.TotalPrice,
+                    PaymentMethod = paymentMethod,
                     ShippingAddress = addressText,
-                    Region          = region,
-                    OrderDate       = order.OrderDate ?? DateTime.UtcNow
+                    Region = region,
+                    OrderDate = order.OrderDate ?? DateTime.UtcNow
                 });
             }
             catch (Exception ex)
@@ -480,17 +354,17 @@ namespace EBayCloneAPI.Services
 
                 await _eventBus.PublishAsync(new OrderPaidEvent
                 {
-                    OrderId       = order.Id,
-                    BuyerEmail    = buyer.Email,
-                    BuyerName     = buyer.Username ?? "Customer",
-                    TotalPrice    = order.TotalPrice,
+                    OrderId = order.Id,
+                    BuyerEmail = buyer.Email,
+                    BuyerName = buyer.Username ?? "Customer",
+                    TotalPrice = order.TotalPrice,
                     PaymentMethod = paymentMethod,
-                    PaidAt        = paidAt,
-                    Items         = items.Select(i => new OrderPaidEvent.OrderItemInfo
+                    PaidAt = paidAt,
+                    Items = items.Select(i => new OrderPaidEvent.OrderItemInfo
                     {
                         ProductName = i.Product?.Title ?? "Product",
-                        Quantity    = i.Quantity ?? 1,
-                        UnitPrice   = i.UnitPrice ?? 0
+                        Quantity = i.Quantity ?? 1,
+                        UnitPrice = i.UnitPrice ?? 0
                     }).ToList()
                 });
             }
@@ -518,13 +392,13 @@ namespace EBayCloneAPI.Services
 
                 await _eventBus.PublishAsync(new OrderStatusChangedEvent
                 {
-                    OrderId    = order.Id,
+                    OrderId = order.Id,
                     BuyerEmail = buyer.Email,
-                    BuyerName  = buyer.Username ?? "Customer",
-                    OldStatus  = oldStatus.ToString(),
-                    NewStatus  = newStatus.ToString(),
+                    BuyerName = buyer.Username ?? "Customer",
+                    OldStatus = oldStatus.ToString(),
+                    NewStatus = newStatus.ToString(),
                     TotalPrice = order.TotalPrice,
-                    ChangedAt  = DateTime.UtcNow
+                    ChangedAt = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
@@ -536,10 +410,10 @@ namespace EBayCloneAPI.Services
         private static decimal CalculateShippingFee(string region) =>
             region.ToLower() switch
             {
-                "north"   => 5,
-                "south"   => 7,
+                "north" => 5,
+                "south" => 7,
                 "central" => 6,
-                _         => 10,
+                _ => 10,
             };
     }
 }
