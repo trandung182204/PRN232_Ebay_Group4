@@ -23,13 +23,10 @@ namespace EbayCloneWeb.Pages.Admin.Orders
         {
             var http = _client.CreateClient();
 
-<<<<<<< HEAD
+
             // Admin: không gửi userId → API trả về tất cả đơn hàng (GetOrdersAsync)
             var url = $"http://localhost:5174/api/order?page={page}&pageSize={pageSize}";
-=======
-            var url = "api/order";
 
->>>>>>> aa517c6bbfc22b60af9fcf3e8b7df8cddd2bcccd
             if (!string.IsNullOrEmpty(status))
                 url += $"&status={Uri.EscapeDataString(status)}";
 
