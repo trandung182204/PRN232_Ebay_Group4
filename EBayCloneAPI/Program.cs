@@ -146,6 +146,12 @@ namespace EBayCloneAPI
             }
             app.UseSerilogRequestLogging();
 
+            // Show detailed error page when running in Development environment
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
             // Apply IP rate limiting only to API endpoints
             app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), branch =>
             {

@@ -43,7 +43,6 @@ namespace EbayCloneWeb.Pages
         public async Task OnGetAsync()
         {
             var client = _factory.CreateClient();
-            client.BaseAddress = new System.Uri("http://localhost:5174/");
             var url = $"api/Product/list?page={Page}&pageSize={PageSize}";
             if (!string.IsNullOrEmpty(Q)) url += $"&q={System.Net.WebUtility.UrlEncode(Q)}";
             if (CategoryId.HasValue) url += $"&categoryId={CategoryId.Value}";

@@ -171,7 +171,7 @@
             return;
         }
 
-        const res = await fetch(`http://localhost:5174/api/order/${id}/status`,
+        const res = await fetch(`/api/order/${id}/status`,
             {
                 method: 'PUT',
                 headers:

@@ -1,5 +1,5 @@
 $(function () {
-    var apiBase = 'http://localhost:5174/';
+    var apiBase = '/';
 
     /* -------------------------------------------------------
        HELPERS
@@ -49,10 +49,10 @@ $(function () {
     function loadCategories() {
         $.getJSON(apiBase + 'api/Category/list')
             .done(function (data) {
-                var $navSel    = $('#navCatId');
+                var $navSel = $('#navCatId');
                 var $filterSel = $('#categoryId');
-                var $strip     = $('#ebCatStrip');
-                var current    = getQueryParam('categoryId');
+                var $strip = $('#ebCatStrip');
+                var current = getQueryParam('categoryId');
 
                 // Navbar dropdown
                 if ($navSel.length) {
@@ -91,16 +91,16 @@ $(function () {
        PRODUCT API URL builder
     ------------------------------------------------------- */
     function buildApiUrl(page) {
-        var q          = $('#q').val();
+        var q = $('#q').val();
         var categoryId = $('#categoryId').val();
-        var orderBy    = $('#orderBy').val();
-        var sortDir    = $('#sortDir').val();
-        var pageSize   = $('#pageSize').val() || '16';
+        var orderBy = $('#orderBy').val();
+        var sortDir = $('#sortDir').val();
+        var pageSize = $('#pageSize').val() || '16';
         var url = apiBase + 'api/Product/list?page=' + (page || 1) + '&pageSize=' + pageSize;
-        if (q)          url += '&q='          + encodeURIComponent(q);
+        if (q) url += '&q=' + encodeURIComponent(q);
         if (categoryId) url += '&categoryId=' + encodeURIComponent(categoryId);
-        if (orderBy)    url += '&orderBy='    + encodeURIComponent(orderBy);
-        if (sortDir)    url += '&sortDir='    + encodeURIComponent(sortDir);
+        if (orderBy) url += '&orderBy=' + encodeURIComponent(orderBy);
+        if (sortDir) url += '&sortDir=' + encodeURIComponent(sortDir);
         return url;
     }
 
@@ -122,10 +122,10 @@ $(function () {
                 var params = new URLSearchParams(window.location.search);
                 params.set('page', page || 1);
                 params.set('pageSize', $('#pageSize').val() || 16);
-                if ($('#q').val())          params.set('q',          $('#q').val());          else params.delete('q');
+                if ($('#q').val()) params.set('q', $('#q').val()); else params.delete('q');
                 if ($('#categoryId').val()) params.set('categoryId', $('#categoryId').val()); else params.delete('categoryId');
-                if ($('#orderBy').val())    params.set('orderBy',    $('#orderBy').val());    else params.delete('orderBy');
-                if ($('#sortDir').val())    params.set('sortDir',    $('#sortDir').val());    else params.delete('sortDir');
+                if ($('#orderBy').val()) params.set('orderBy', $('#orderBy').val()); else params.delete('orderBy');
+                if ($('#sortDir').val()) params.set('sortDir', $('#sortDir').val()); else params.delete('sortDir');
                 history.replaceState(null, '', window.location.pathname + '?' + params.toString());
             })
             .fail(function () { console.warn('Failed to load products'); });
@@ -185,7 +185,7 @@ $(function () {
         var $pag = $('.pagination').empty();
         for (var i = 1; i <= totalPages; i++) {
             var li = $('<li>').addClass('page-item' + (i === current ? ' active' : ''));
-            var a  = $('<a>').addClass('page-link').attr('href', '#').text(i).data('page', i);
+            var a = $('<a>').addClass('page-link').attr('href', '#').text(i).data('page', i);
             $pag.append(li.append(a));
         }
     }
@@ -195,18 +195,18 @@ $(function () {
     ------------------------------------------------------- */
     loadCategories();
 
-    var qs_q          = getQueryParam('q');
+    var qs_q = getQueryParam('q');
     var qs_categoryId = getQueryParam('categoryId');
-    var qs_orderBy    = getQueryParam('orderBy');
-    var qs_sortDir    = getQueryParam('sortDir');
-    var qs_pageSize   = getQueryParam('pageSize');
-    var qs_page       = parseInt(getQueryParam('page') || '1');
+    var qs_orderBy = getQueryParam('orderBy');
+    var qs_sortDir = getQueryParam('sortDir');
+    var qs_pageSize = getQueryParam('pageSize');
+    var qs_page = parseInt(getQueryParam('page') || '1');
 
-    if (qs_q)          { $('#q').val(qs_q);         $('#heroQ').val(qs_q); }
+    if (qs_q) { $('#q').val(qs_q); $('#heroQ').val(qs_q); }
     if (qs_categoryId) { $('#categoryId').val(qs_categoryId); }
-    if (qs_orderBy)    { $('#orderBy').val(qs_orderBy); }
-    if (qs_sortDir)    { $('#sortDir').val(qs_sortDir); }
-    if (qs_pageSize)   { $('#pageSize').val(qs_pageSize); }
+    if (qs_orderBy) { $('#orderBy').val(qs_orderBy); }
+    if (qs_sortDir) { $('#sortDir').val(qs_sortDir); }
+    if (qs_pageSize) { $('#pageSize').val(qs_pageSize); }
 
     // Restore the combined sort dropdown
     restoreSortSelect(qs_orderBy, qs_sortDir);

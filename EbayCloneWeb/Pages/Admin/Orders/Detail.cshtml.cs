@@ -20,7 +20,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
             var http = _client.CreateClient();
 
             Order = await http.GetFromJsonAsync<OrderDetailDTO>(
-                $"http://localhost:5174/api/order/{id}"
+                $"api/order/{id}"
             );
         }
     }
