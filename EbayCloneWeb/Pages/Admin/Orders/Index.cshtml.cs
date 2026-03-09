@@ -19,7 +19,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
         {
             var http = _client.CreateClient();
 
-            var url = "http://localhost:5174/api/order";
+            var url = "api/order";
 
             if (!string.IsNullOrEmpty(status))
                 url += $"?status={status}";

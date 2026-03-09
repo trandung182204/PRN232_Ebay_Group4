@@ -36,7 +36,6 @@ namespace EbayCloneWeb.Pages.Order
         {
             // Load product
             var client = _factory.CreateClient();
-            client.BaseAddress = new System.Uri("http://localhost:5174/");
             var res = await client.GetAsync($"api/Product/{id}");
             if (!res.IsSuccessStatusCode) return RedirectToPage("/Index");
             Product = await res.Content.ReadFromJsonAsync<ProductDto>();
@@ -96,7 +95,6 @@ namespace EbayCloneWeb.Pages.Order
             }
 
             var client = _factory.CreateClient();
-            client.BaseAddress = new Uri("http://localhost:5174/");
 
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(ProductId.ToString()), "productId");

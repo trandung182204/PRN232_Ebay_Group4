@@ -11,7 +11,11 @@ namespace EbayCloneWeb
 
             // Add services to the container.
             builder.Services.AddRazorPages();
-            builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient(Microsoft.Extensions.Options.Options.DefaultName, client =>
+            {
+                var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5174/";
+                client.BaseAddress = new Uri(apiBaseUrl);
+            });
             builder.Services.AddSingleton<Microsoft.AspNetCore.Http.IHttpContextAccessor, Microsoft.AspNetCore.Http.HttpContextAccessor>();
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
@@ -23,6 +27,11 @@ namespace EbayCloneWeb
             // Product service not registered; pages use HttpClient directly
 
             var app = builder.Build();
+
+            app.UseForwardedHeaders(new Microsoft.AspNetCore.Builder.ForwardedHeadersOptions
+            {
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())

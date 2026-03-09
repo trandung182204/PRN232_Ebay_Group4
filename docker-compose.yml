@@ -1,21 +1,29 @@
+version: "3.9"
+
 services:
 
   api1:
     build:
-      context: ./EbayCloneAPI
+      context: ./EBayCloneAPI
       dockerfile: Dockerfile
     container_name: ebay_api_1
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__MyCnn=Server=host.docker.internal,1433;Database=CloneEbayDB;User Id=sa;Password=123456;Encrypt=False;TrustServerCertificate=True
+    volumes:
+      - ./seed_data.sql:/app/seed_data.sql:ro
     restart: unless-stopped
 
   api2:
     build:
-      context: ./EbayCloneAPI
+      context: ./EBayCloneAPI
       dockerfile: Dockerfile
     container_name: ebay_api_2
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__MyCnn=Server=host.docker.internal,1433;Database=CloneEbayDB;User Id=sa;Password=123456;Encrypt=False;TrustServerCertificate=True
+    volumes:
+      - ./seed_data.sql:/app/seed_data.sql:ro
     restart: unless-stopped
 
   web1:
@@ -25,7 +33,6 @@ services:
     container_name: ebay_web_1
     depends_on:
       - api1
-      - api2
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
     restart: unless-stopped
@@ -36,7 +43,6 @@ services:
       dockerfile: Dockerfile
     container_name: ebay_web_2
     depends_on:
-      - api1
       - api2
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
@@ -50,7 +56,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
-      - api1
-      - api2
       - web1
       - web2
+      - api1
+      - api2
+    restart: unless-stopped
+
