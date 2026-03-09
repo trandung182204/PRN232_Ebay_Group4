@@ -27,19 +27,19 @@ jobs:
 
       # Bước 3: Restore NuGet packages cho API
       - name: Restore API dependencies
-        run: dotnet restore EBayCloneAPI/EBayCloneAPI.csproj
+        run: dotnet restore EBayCloneAPI/EBayAPI.csproj
 
       # Bước 4: Restore NuGet packages cho Web
       - name: Restore Web dependencies
-        run: dotnet restore EbayCloneWeb/EbayCloneWeb.csproj
+        run: dotnet restore EbayCloneWeb/EbayWeb.csproj
 
       # Bước 5: Build API project
       - name: Build API
-        run: dotnet build EBayCloneAPI/EBayCloneAPI.csproj --configuration Release --no-restore
+        run: dotnet build EBayCloneAPI/EBayAPI.csproj --configuration Release --no-restore
 
       # Bước 6: Build Web project
       - name: Build Web
-        run: dotnet build EbayCloneWeb/EbayCloneWeb.csproj --configuration Release --no-restore
+        run: dotnet build EbayCloneWeb/EbayWeb.csproj --configuration Release --no-restore
 
   # ===== JOB 2: BUILD DOCKER IMAGES =====
   docker:
