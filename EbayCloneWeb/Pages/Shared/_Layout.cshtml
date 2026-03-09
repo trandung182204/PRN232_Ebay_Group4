@@ -44,6 +44,12 @@
                         Hi, <strong>@Context.Session.GetString("Role")</strong>
                     </span>
 
+                    <a class="eb-nav-link" asp-page="/Order/MyOrders">
+                        <i class="bi bi-bag-check"></i> Đơn của tôi
+                    </a>
+                    <a class="eb-nav-link" asp-page="/Tracking/Index">
+                        <i class="bi bi-truck"></i> Track order
+                    </a>
                     @if (Context.Session.GetString("Role")?.ToLower() == "admin")
                     {
                         <a class="eb-nav-link eb-nav-admin" asp-page="/Admin/Orders/Index">
@@ -59,6 +65,7 @@
                 }
                 else
                 {
+                    <a class="eb-nav-link" asp-page="/Tracking/Index"><i class="bi bi-truck"></i> Track order</a>
                     <a class="eb-signin-btn" asp-page="/Account/Login">Sign in</a>
                 }
 

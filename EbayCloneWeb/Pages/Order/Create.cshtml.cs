@@ -152,11 +152,10 @@ namespace EbayCloneWeb.Pages.Order
             }
 
             // ============================
-            // COD
+            // COD: chuyển đến trang Success để khách xem mã vận đơn
             // ============================
-
-            TempData["Success"] = $"Order created successfully: {orderId}";
-            return RedirectToPage("/Index");
+            TempData["Success"] = $"Order #{orderId} created. Your tracking code is on the next page.";
+            return RedirectToPage("/Order/Success", new { id = orderId });
         }
 
         public class ProductDto

@@ -73,7 +73,7 @@ namespace EBayCloneAPI.Services
                 UserId = userId,
                 Street = addressText,
                 City = "Unknown",
-                State = "Unknown",
+                State = region,
                 Country = "Unknown",
                 FullName = "Customer",
                 Phone = "Unknown",
@@ -111,19 +111,46 @@ namespace EBayCloneAPI.Services
 
             _db.OrderItems.Add(item);
 
-            // 4️⃣ Create Payment (Pending)
-            var payment = new Payment
+            // 4️⃣ Create initial Payment record
+            // COD: tạo bản ghi Payment (PendingPayment) ngay khi đặt đơn.
+            // PAYPAL: bỏ qua bước này, Payment sẽ được tạo bởi PaypalPaymentProvider.CreatePayment.
+            if (string.Equals(paymentMethod, "COD", StringComparison.OrdinalIgnoreCase))
             {
-                OrderId = order.Id,
-                UserId = userId,
-                Amount = total,
-                Method = paymentMethod,
-                Status = OrderStatus.PendingPayment,
-                PaidAt = null
-            };
+                var payment = new Payment
+                {
+                    OrderId = order.Id,
+                    UserId = userId,
+                    Amount = total,
+                    Method = paymentMethod,
+                    Status = OrderStatus.PendingPayment,
+                    PaidAt = null
+                };
 
-            _db.Payments.Add(payment);
-            await _db.SaveChangesAsync();
+                _db.Payments.Add(payment);
+                await _db.SaveChangesAsync();
+            }
+
+            // COD: tạo shipment ngay khi đặt hàng (khách trả tiền mặt khi nhận hàng). Giữ Status = PendingPayment (chưa thanh toán).
+            if (string.Equals(paymentMethod, "COD", StringComparison.OrdinalIgnoreCase))
+            {
+                var (shipOk, trackingCode) = await _shipping.CreateShipmentAsync(order.Id, region, "internal", "SHIP_SECURE_456");
+                if (shipOk && !string.IsNullOrEmpty(trackingCode))
+                {
+                    _db.ShippingInfos.Add(new ShippingInfo
+                    {
+                        OrderId = order.Id,
+                        Carrier = "FakeCarrier",
+                        TrackingNumber = trackingCode,
+                        Status = "Pending",
+                        EstimatedArrival = DateTime.UtcNow.AddDays(3)
+                    });
+                    // COD: không đổi Status sang Shipping, giữ PendingPayment cho thống nhất với giao diện (PayPal = Paid)
+                    await _db.SaveChangesAsync();
+                    foreach (var hook in _shippingHooks)
+                        await hook.OnShipmentCreated(order.Id, trackingCode);
+                    _logger.LogInformation("COD order {OrderId}: shipment created, tracking {TrackingCode}", order.Id, trackingCode);
+                }
+            }
 
             // ── Publish OrderCreatedEvent → sends confirmation email to buyer ──
             await PublishOrderCreatedEventAsync(order, product, quantity, addressText, paymentMethod, region, productTotal, shippingFee);
@@ -141,7 +168,7 @@ namespace EBayCloneAPI.Services
             string authToken,
             string secureKey)
         {
-            var order = await _db.OrderTables.FindAsync(orderId);
+            var order = await _db.OrderTables.Include(o => o.Address).FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null || order.Status != EBayAPI.Enums.OrderStatus.PendingPayment)
                 return false;
@@ -167,6 +194,26 @@ namespace EBayCloneAPI.Services
             _db.Payments.Add(payment);
             order.Status = EBayAPI.Enums.OrderStatus.Paid;
             await _db.SaveChangesAsync();
+
+            // PayPal (và thanh toán online khác): sau khi paid thành công mới tạo shipment
+            var region = order.Address?.State?.Trim().ToLower() ?? "north";
+            var (shipOk, trackingCode) = await _shipping.CreateShipmentAsync(order.Id, region, "internal", "SHIP_SECURE_456");
+            if (shipOk && !string.IsNullOrEmpty(trackingCode))
+            {
+                _db.ShippingInfos.Add(new ShippingInfo
+                {
+                    OrderId = order.Id,
+                    Carrier = "FakeCarrier",
+                    TrackingNumber = trackingCode,
+                    Status = "Pending",
+                    EstimatedArrival = DateTime.UtcNow.AddDays(3)
+                });
+                order.Status = EBayAPI.Enums.OrderStatus.Shipping;
+                await _db.SaveChangesAsync();
+                foreach (var hook in _shippingHooks)
+                    await hook.OnShipmentCreated(order.Id, trackingCode);
+                _logger.LogInformation("Paid order {OrderId}: shipment created, tracking {TrackingCode}", order.Id, trackingCode);
+            }
 
             // ── KAN-16 / KAN-18: Publish OrderPaidEvent ──────────────────
             await PublishOrderPaidEventAsync(order, paymentMethod, paidAt);
@@ -288,7 +335,41 @@ namespace EBayCloneAPI.Services
                 .OrderByDescending(o => o.OrderDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(o => new { o.Id, o.OrderDate, o.TotalPrice, o.Status, Buyer = o.BuyerId })
+                .Select(o => new
+                {
+                    o.Id,
+                    o.OrderDate,
+                    o.TotalPrice,
+                    o.Status,
+                    Buyer = o.BuyerId,
+                    TrackingNumbers = o.ShippingInfos.Select(s => s.TrackingNumber).ToList()
+                })
+                .ToListAsync();
+
+            return new { page, pageSize, total, data = orders };
+        }
+
+        public async Task<object> GetOrdersByBuyerAsync(int userId, int page, int pageSize, EBayAPI.Enums.OrderStatus? status)
+        {
+            var query = _db.OrderTables
+                .Where(o => o.BuyerId == userId);
+
+            if (status != null)
+                query = query.Where(o => o.Status == status);
+
+            var total = await query.CountAsync();
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(o => new
+                {
+                    o.Id,
+                    o.OrderDate,
+                    o.TotalPrice,
+                    o.Status,
+                    TrackingNumbers = o.ShippingInfos.Select(s => s.TrackingNumber).ToList()
+                })
                 .ToListAsync();
 
             return new { page, pageSize, total, data = orders };
@@ -410,10 +491,10 @@ namespace EBayCloneAPI.Services
         private static decimal CalculateShippingFee(string region) =>
             region.ToLower() switch
             {
-                "north" => 5,
-                "south" => 7,
-                "central" => 6,
-                _ => 10,
+                "north" => 20,
+                "central" => 40,
+                "south" => 60,
+                _ => 60,
             };
     }
 }

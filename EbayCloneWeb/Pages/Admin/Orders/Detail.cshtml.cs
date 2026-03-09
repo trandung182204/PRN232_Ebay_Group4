@@ -66,7 +66,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
 
         public decimal Amount { get; set; }
 
-        public DateTime PaidAt { get; set; }
+        public DateTime? PaidAt { get; set; }
     }
 
 

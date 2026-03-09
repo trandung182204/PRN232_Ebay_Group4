@@ -15,14 +15,18 @@ namespace EbayCloneWeb.Pages.Admin.Orders
             _client = client;
         }
 
-        public async Task OnGet(string? status)
+        public int TotalCount { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 50;
+
+        public async Task OnGet(string? status, int page = 1, int pageSize = 50)
         {
             var http = _client.CreateClient();
 
-            var url = "http://localhost:5174/api/order";
-
+            // Admin: không gửi userId → API trả về tất cả đơn hàng (GetOrdersAsync)
+            var url = $"http://localhost:5174/api/order?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(status))
-                url += $"?status={status}";
+                url += $"&status={Uri.EscapeDataString(status)}";
 
             var res = await http.GetAsync(url);
 
@@ -34,6 +38,9 @@ namespace EbayCloneWeb.Pages.Admin.Orders
 
             var result = await res.Content.ReadFromJsonAsync<OrderResult>();
             Orders = result?.data ?? new List<OrderDTO>();
+            TotalCount = result?.total ?? 0;
+            Page = result?.page ?? 1;
+            PageSize = result?.pageSize ?? pageSize;
         }
     }
 
@@ -57,5 +64,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
         public string Status { get; set; }
 
         public int Buyer { get; set; }
+
+        public List<string>? TrackingNumbers { get; set; }
     }
 }

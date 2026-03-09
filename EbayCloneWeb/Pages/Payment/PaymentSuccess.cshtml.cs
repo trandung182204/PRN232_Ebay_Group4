@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace EbayWeb.Pages.Payment;
+namespace EbayCloneWeb.Pages.Payment;
 
 public class PaymentSuccess : PageModel
 {
@@ -10,15 +10,14 @@ public class PaymentSuccess : PageModel
 
     public string? Message { get; set; }
 
-    public void OnGet()
+    public IActionResult OnGet()
     {
         if (OrderId.HasValue)
         {
-            Message = $"Order created successfully: {OrderId}";
+            // Chuyển đến trang Order Success để khách xem mã vận đơn (shipment đã tạo sau khi paid)
+            return RedirectToPage("/Order/Success", new { id = OrderId.Value });
         }
-        else
-        {
-            Message = "Your payment was successful!";
-        }
+        Message = "Your payment was successful!";
+        return Page();
     }
 }
