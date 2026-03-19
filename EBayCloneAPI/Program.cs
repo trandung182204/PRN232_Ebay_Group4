@@ -1,5 +1,6 @@
 
 using System;
+using System.Text.Json.Serialization;
 using EBayAPI.Configurations;
 using EBayAPI.Events;
 using EBayAPI.Events.Handlers;
@@ -45,13 +46,11 @@ namespace EBayCloneAPI
 
             // Add services to the container.
 
+            // Trong Program.cs
             builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter()
-        );
-    });
+                .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             // CORS - allow frontend to call API during development
             builder.Services.AddCors(options =>
             {

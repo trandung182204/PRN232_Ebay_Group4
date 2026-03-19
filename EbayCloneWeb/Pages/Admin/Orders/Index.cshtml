@@ -95,7 +95,7 @@
                                 <td>
                                     @if (o.TrackingNumbers != null && o.TrackingNumbers.Count > 0)
                                     {
-                                        @foreach (var code in o.TrackingNumbers)
+                                        foreach (var code in o.TrackingNumbers)
                                         {
                                             <a asp-page="/Tracking/Index" asp-route-code="@code" target="_blank" class="d-block small text-eb-blue text-decoration-none" title="Tra cứu vận đơn">@code</a>
                                         }
