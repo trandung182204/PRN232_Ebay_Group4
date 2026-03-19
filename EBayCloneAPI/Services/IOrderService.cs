@@ -32,6 +32,9 @@ namespace EBayCloneAPI.Services
         // Admin list orders
         Task<object> GetOrdersAsync(int page, int pageSize, OrderStatus? status);
 
+        // Đơn hàng của người mua (theo BuyerId)
+        Task<object> GetOrdersByBuyerAsync(int userId, int page, int pageSize, OrderStatus? status);
+
         // Admin update status
         Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status);
     }

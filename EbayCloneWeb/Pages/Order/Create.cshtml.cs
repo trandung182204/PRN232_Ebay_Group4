@@ -36,7 +36,6 @@ namespace EbayCloneWeb.Pages.Order
         {
             // Load product
             var client = _factory.CreateClient();
-            client.BaseAddress = new System.Uri("http://localhost:5174/");
             var res = await client.GetAsync($"api/Product/{id}");
             if (!res.IsSuccessStatusCode) return RedirectToPage("/Index");
             Product = await res.Content.ReadFromJsonAsync<ProductDto>();
@@ -96,7 +95,6 @@ namespace EbayCloneWeb.Pages.Order
             }
 
             var client = _factory.CreateClient();
-            client.BaseAddress = new Uri("http://localhost:5174/");
 
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(ProductId.ToString()), "productId");
@@ -132,7 +130,7 @@ namespace EbayCloneWeb.Pages.Order
                     userId = userId.Value,
                     method = "PAYPAL"
                 };
-// 🔴 QUAN TRỌNG: thêm header cho middleware
+                // 🔴 QUAN TRỌNG: thêm header cho middleware
                 client.DefaultRequestHeaders.Remove("X-PAYMENT-KEY");
                 client.DefaultRequestHeaders.Add("X-PAYMENT-KEY", _secretKey);
                 var paymentRes = await client.PostAsJsonAsync("api/payments", paymentBody);
@@ -152,11 +150,10 @@ namespace EbayCloneWeb.Pages.Order
             }
 
             // ============================
-            // COD
+            // COD: chuyển đến trang Success để khách xem mã vận đơn
             // ============================
-
-            TempData["Success"] = $"Order created successfully: {orderId}";
-            return RedirectToPage("/Index");
+            TempData["Success"] = $"Order #{orderId} created. Your tracking code is on the next page.";
+            return RedirectToPage("/Order/Success", new { id = orderId });
         }
 
         public class ProductDto

@@ -58,11 +58,15 @@ namespace EBayCloneAPI.Controllers
             return Ok(new { message = "Payment successful" });
         }
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrderDetail(int id)
+        public async Task<IActionResult> GetOrderDetail(int id, [FromQuery] int? userId = null)
         {
             var order = await _orders.GetOrderDetailAsync(id);
 
             if (order == null)
+                return NotFound();
+
+            // Nếu client gửi userId (người mua đăng nhập), chỉ trả về đơn nếu đúng là đơn của họ
+            if (userId.HasValue && order.BuyerId != userId.Value)
                 return NotFound();
 
             var result = new
@@ -99,11 +103,16 @@ namespace EBayCloneAPI.Controllers
             return Ok(result);
         }
         [HttpGet]
-        public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10, OrderStatus? status = null)
+        public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10, OrderStatus? status = null, [FromQuery] int? userId = null)
         {
-            var result = await _orders.GetOrdersAsync(page, pageSize, status);
-
-            return Ok(result);
+            // Nếu có userId → trả về đơn hàng của người mua đó (cho trang "Đơn của tôi")
+            if (userId.HasValue && userId.Value > 0)
+            {
+                var result = await _orders.GetOrdersByBuyerAsync(userId.Value, page, pageSize, status);
+                return Ok(result);
+            }
+            var allResult = await _orders.GetOrdersAsync(page, pageSize, status);
+            return Ok(allResult);
         }
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderStatus status)

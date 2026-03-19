@@ -94,8 +94,11 @@ namespace EBayCloneAPI
             // Services
             builder.Services.AddScoped<EBayCloneAPI.Services.IEmailService, EBayCloneAPI.Services.EmailService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentService, EBayCloneAPI.Services.PaymentService>();
+            builder.Services.AddSingleton<EBayCloneAPI.Services.FakeShippingProviderService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IShippingService, EBayCloneAPI.Services.ShippingService>();
             builder.Services.AddScoped<EBayCloneAPI.Services.IOrderService, EBayCloneAPI.Services.OrderService>();
+            builder.Services.AddScoped<IPaymentEventHook, PaymentEmailHook>();
+            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
             // Payment Providers
             builder.Services.AddScoped<EBayCloneAPI.Services.IPaymentProvider, EBayCloneAPI.Services.CodPaymentProvider>();
@@ -105,12 +108,7 @@ namespace EBayCloneAPI
             builder.Services.AddHttpClient<EBayAPI.Services.PaypalService>();
 
             builder.Services.AddSingleton<PluginManager>();
-
-            builder.Services.AddSingleton<IPaymentHook, StripePaymentPlugin>();
             builder.Services.AddSingleton<IShippingHook, VNPostShippingPlugin>();
-
-            builder.Services.AddScoped<IPaymentEventHook, TransactionLogHook>();
-            builder.Services.AddScoped<IShippingEventHook, ShippingLogHook>();
 
             // ── KAN-18: Event Bus (singleton; uses IServiceScopeFactory internally) ──
             builder.Services.AddSingleton<IEventBus, EventBus>();
@@ -147,6 +145,12 @@ namespace EBayCloneAPI
                 DbSeeder.SeedAsync(db).Wait();
             }
             app.UseSerilogRequestLogging();
+
+            // Show detailed error page when running in Development environment
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
             // Apply IP rate limiting only to API endpoints
             app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), branch =>

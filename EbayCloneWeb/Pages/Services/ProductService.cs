@@ -20,7 +20,6 @@ namespace EbayCloneWeb.Services
         public ProductService(IHttpClientFactory factory)
         {
             _http = factory.CreateClient();
-            _http.BaseAddress = new System.Uri("http://localhost:5174/");
         }
 
         public async Task<IEnumerable<ProductDto>> ListAsync(int limit = 50)

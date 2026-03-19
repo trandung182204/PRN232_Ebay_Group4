@@ -28,7 +28,7 @@ namespace EbayCloneWeb.Pages.Account
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(Email ?? string.Empty), "email");
             content.Add(new StringContent(Password ?? string.Empty), "password");
-            client.BaseAddress = new System.Uri("http://localhost:5174/");
+
             var res = await client.PostAsync("api/Auth/login", content);
             if (!res.IsSuccessStatusCode)
             {

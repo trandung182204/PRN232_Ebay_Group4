@@ -76,7 +76,7 @@
                         @foreach (var item in Model.Order.OrderItems)
                         {
                             <tr>
-                                <td class="fw-semibold">@item.Product?.Name</td>
+                                <td class="fw-semibold">@item.Product?.Title</td>
                                 <td>US $@item.Product?.Price</td>
                                 <td>@item.Quantity</td>
                                 <td class="fw-bold" style="color:var(--eb-red)">
@@ -108,34 +108,71 @@
                         </div>
                         <div class="col-sm-4">
                             <div class="text-muted small">Paid At</div>
-                            <div>@p.PaidAt</div>
+                            <div>@(p.PaidAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")</div>
                         </div>
                     </div>
                 }
             </div>
         </div>
 
-        <!-- SHIPPING -->
+        <!-- SHIPPING (admin có thể cập nhật trạng thái ship) -->
         <div class="eb-admin-card">
             <div class="eb-admin-card-header">
                 <i class="bi bi-truck me-2"></i>Shipping
             </div>
             <div class="eb-admin-card-body">
-                @foreach (var s in Model.Order.ShippingInfos)
+                @if (Model.Order.ShippingInfos == null || !Model.Order.ShippingInfos.Any())
                 {
-                    <div class="row g-2">
-                        <div class="col-sm-6">
-                            <div class="text-muted small">Tracking number</div>
-                            <div class="fw-semibold">@s.TrackingNumber</div>
+                    <p class="text-muted mb-0">Chưa có thông tin vận chuyển.</p>
+                }
+                else
+                {
+                    @foreach (var s in Model.Order.ShippingInfos)
+                    {
+                        <div class="row g-2 align-items-end mb-3 pb-3 border-bottom">
+                            <div class="col-sm-4">
+                                <div class="text-muted small">Tracking number</div>
+                                <div class="fw-semibold">@s.TrackingNumber</div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="text-muted small">Trạng thái vận chuyển</div>
+                                <select class="form-select form-select-sm ship-status-select" data-tracking="@s.TrackingNumber" onchange="updateShipStatus(this)">
+                                    <option value="Pending" selected="@(s.Status == "Pending")">Pending</option>
+                                    <option value="InTransit" selected="@(s.Status == "InTransit")">InTransit</option>
+                                    <option value="Delivered" selected="@(s.Status == "Delivered")">Delivered</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <a asp-page="/Tracking/Index" asp-route-code="@s.TrackingNumber" target="_blank" class="btn btn-sm btn-outline-primary">Tra cứu</a>
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="text-muted small">Shipping status</div>
-                            <div>@s.Status</div>
-                        </div>
-                    </div>
+                    }
                 }
             </div>
         </div>
     }
 
 </div>
+
+@section Scripts {
+<script>
+async function updateShipStatus(selectEl) {
+    var code = selectEl.dataset.tracking;
+    var status = selectEl.value;
+    if (!code || !status) return;
+    try {
+        var res = await fetch('http://localhost:5174/api/Tracking/' + encodeURIComponent(code) + '/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        });
+        if (res.ok)
+            alert('Đã cập nhật trạng thái vận chuyển.');
+        else
+            alert('Cập nhật thất bại: ' + (await res.text()));
+    } catch (e) {
+        alert('Lỗi: ' + e.message);
+    }
+}
+</script>
+}

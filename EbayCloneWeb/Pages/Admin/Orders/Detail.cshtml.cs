@@ -20,7 +20,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
             var http = _client.CreateClient();
 
             Order = await http.GetFromJsonAsync<OrderDetailDTO>(
-                $"http://localhost:5174/api/order/{id}"
+                $"api/order/{id}"
             );
         }
     }
@@ -54,7 +54,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
 
     public class ProductDTO
     {
-        public string Name { get; set; }
+        public string Title { get; set; }
 
         public decimal Price { get; set; }
     }
@@ -66,7 +66,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
 
         public decimal Amount { get; set; }
 
-        public DateTime PaidAt { get; set; }
+        public DateTime? PaidAt { get; set; }
     }
 
 

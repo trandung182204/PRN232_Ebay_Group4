@@ -3,6 +3,7 @@ using EBayAPI.Enums;
 using EBayAPI.Events;
 using EBayAPI.Services;
 using EBayCloneAPI.Data;
+using EBayCloneAPI.Models;
 using EBayCloneAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +18,20 @@ public class PaymentController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _config;
     private readonly IEventBus _eventBus;
+    private readonly IShippingService _shipping;
 
-    public PaymentController(IPaymentService paymentService, ApplicationDbContext dbContext, IConfiguration config, IEventBus eventBus)
+    public PaymentController(
+        IPaymentService paymentService,
+        ApplicationDbContext dbContext,
+        IConfiguration config,
+        IEventBus eventBus,
+        IShippingService shipping)
     {
         _paymentService = paymentService;
         _context = dbContext;
         _config = config;
         _eventBus = eventBus;
+        _shipping = shipping;
     }
 
     [HttpPost]
@@ -101,6 +109,28 @@ public class PaymentController : ControllerBase
                         UnitPrice   = i.UnitPrice ?? 0
                     }).ToList()
                 });
+            }
+
+            // Sau khi PayPal thanh toán thành công → tạo shipment và cập nhật trạng thái đơn
+            if (order != null)
+            {
+                var address = await _context.Addresses.FindAsync(order.AddressId);
+                var region = address?.State?.Trim().ToLower() ?? "north";
+
+                var (shipOk, trackingCode) = await _shipping.CreateShipmentAsync(order.Id, region, "internal", "SHIP_SECURE_456");
+                if (shipOk && !string.IsNullOrEmpty(trackingCode))
+                {
+                    _context.ShippingInfos.Add(new ShippingInfo
+                    {
+                        OrderId = order.Id,
+                        Carrier = "FakeCarrier",
+                        TrackingNumber = trackingCode,
+                        Status = "Pending",
+                        EstimatedArrival = DateTime.UtcNow.AddDays(3)
+                    });
+                    order.Status = OrderStatus.Shipping;
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return Redirect($"{baseUrl}/Payment/PaymentSuccess?orderId={payment.OrderId}");

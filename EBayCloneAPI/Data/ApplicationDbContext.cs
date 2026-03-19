@@ -149,6 +149,9 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.Order).WithMany(p => p.Payments).HasConstraintName("FK__Payment__orderId__4AB81AF0");
 
             entity.HasOne(d => d.User).WithMany(p => p.Payments).HasConstraintName("FK__Payment__userId__4BAC3F29");
+
+            // Ensure enum stored as string to match existing nvarchar column
+            entity.Property(e => e.Status).HasConversion<string>();
         });
 
         modelBuilder.Entity<Product>(entity =>
