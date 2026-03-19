@@ -141,7 +141,7 @@ namespace EBayCloneAPI.Services
                         OrderId = order.Id,
                         Carrier = "FakeCarrier",
                         TrackingNumber = trackingCode,
-                        Status = "Pending",
+                        Status = OrderStatus.PendingPayment.ToString(),
                         EstimatedArrival = DateTime.UtcNow.AddDays(3)
                     });
                     // COD: không đổi Status sang Shipping, giữ PendingPayment cho thống nhất với giao diện (PayPal = Paid)
@@ -205,7 +205,7 @@ namespace EBayCloneAPI.Services
                     OrderId = order.Id,
                     Carrier = "FakeCarrier",
                     TrackingNumber = trackingCode,
-                    Status = "Pending",
+                    Status = OrderStatus.PendingPayment.ToString(),
                     EstimatedArrival = DateTime.UtcNow.AddDays(3)
                 });
                 order.Status = EBayAPI.Enums.OrderStatus.Shipping;

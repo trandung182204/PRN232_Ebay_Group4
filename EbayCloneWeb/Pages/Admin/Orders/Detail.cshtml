@@ -76,7 +76,7 @@
                         @foreach (var item in Model.Order.OrderItems)
                         {
                             <tr>
-                                <td class="fw-semibold">@item.Product?.Name</td>
+                                <td class="fw-semibold">@item.Product?.Title</td>
                                 <td>US $@item.Product?.Price</td>
                                 <td>@item.Quantity</td>
                                 <td class="fw-bold" style="color:var(--eb-red)">
