@@ -200,6 +200,9 @@ public partial class ApplicationDbContext : DbContext
         .Property(o => o.Status)
         .HasConversion<string>();
 
+        modelBuilder.Entity<Payment>()
+            .Property(p => p.Status)
+            .HasConversion<string>();
         base.OnModelCreating(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
