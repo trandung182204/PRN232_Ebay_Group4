@@ -1,0 +1,331 @@
+# =============================================================================
+# Kubernetes Deployment - eBay Clone (Zero Downtime)
+# =============================================================================
+# Key zero-downtime features:
+#   - RollingUpdate strategy with maxSurge=1, maxUnavailable=0
+#   - Readiness probes ensure traffic only goes to healthy pods
+#   - Liveness probes restart unhealthy pods automatically
+#   - preStop lifecycle hook gives in-flight requests time to complete
+#   - PodDisruptionBudgets guarantee minimum available pods during disruptions
+#   - HPA auto-scales based on resource utilization
+# =============================================================================
+
+# ---------------------
+# SQL Server Deployment
+# ---------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver
+  labels:
+    app: sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_SA_PASSWORD
+          value: "P@ssw0rd123!"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql
+      volumes:
+      - name: sqlserver-data
+        persistentVolumeClaim:
+          claimName: sqlserver-pvc
+---
+# SQL Server PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# SQL Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-service
+spec:
+  type: ClusterIP
+  selector:
+    app: sqlserver
+  ports:
+  - port: 1433
+    targetPort: 1433
+    protocol: TCP
+
+---
+# =============================================================================
+# API Deployment - Rolling Update (Zero Downtime)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebay-api
+  labels:
+    app: ebay-api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          # Create at most 1 extra pod during update
+      maxUnavailable: 0    # Never take down a pod until new one is ready
+  selector:
+    matchLabels:
+      app: ebay-api
+  template:
+    metadata:
+      labels:
+        app: ebay-api
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: api
+        image: ebayclone/api:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ConnectionStrings__MyCnn
+          value: "Server=sqlserver-service,1433;Database=CloneEbayDB;User Id=sa;Password=P@ssw0rd123!;Encrypt=False;TrustServerCertificate=True"
+        - name: Frontend__BaseUrl
+          value: "http://ebay-web-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Readiness probe - pod receives traffic ONLY when this passes
+        # Critical for zero-downtime: new pod must be ready before old one stops
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+        # Liveness probe - restarts container if unhealthy
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Graceful shutdown - lets in-flight requests complete before termination
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebay-api-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ebay-api
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+
+---
+# =============================================================================
+# Web Deployment - Rolling Update (Zero Downtime)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebay-web
+  labels:
+    app: ebay-web
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          # Create at most 1 extra pod during update
+      maxUnavailable: 0    # Never take down a pod until new one is ready
+  selector:
+    matchLabels:
+      app: ebay-web
+  template:
+    metadata:
+      labels:
+        app: ebay-web
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: web
+        image: ebayclone/web:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ApiSettings__BaseUrl
+          value: "http://ebay-api-service"
+        - name: ApiSettings__ClientBaseUrl
+          value: ""
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Readiness probe - zero-downtime gate
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+        # Liveness probe - auto-heal
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Graceful shutdown
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+---
+# Web Service (LoadBalancer - external entry point)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebay-web-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: ebay-web
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+
+---
+# =============================================================================
+# Horizontal Pod Autoscalers
+# =============================================================================
+
+# API Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ebay-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ebay-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Web Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ebay-web-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ebay-web
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+# =============================================================================
+# Pod Disruption Budgets - Ensures availability during voluntary disruptions
+# (node drains, cluster upgrades, etc.)
+# =============================================================================
+
+# API PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ebay-api-pdb
+spec:
+  minAvailable: 2    # Always keep at least 2 API pods running
+  selector:
+    matchLabels:
+      app: ebay-api
+---
+# Web PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ebay-web-pdb
+spec:
+  minAvailable: 2    # Always keep at least 2 Web pods running
+  selector:
+    matchLabels:
+      app: ebay-web

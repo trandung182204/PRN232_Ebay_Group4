@@ -14,7 +14,7 @@ namespace EBayCloneAPI.Middleware
         private readonly ILogger<IpRateLimitingMiddleware> _logger;
 
         // Default limits
-        private readonly int _maxRequests = 60; // requests
+        private readonly int _maxRequests = 10000; // requests
         private readonly TimeSpan _period = TimeSpan.FromMinutes(1);
 
         public IpRateLimitingMiddleware(RequestDelegate next, IMemoryCache cache, ILogger<IpRateLimitingMiddleware> logger)
