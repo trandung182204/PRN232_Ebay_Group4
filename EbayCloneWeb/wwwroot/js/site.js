@@ -1,5 +1,6 @@
 $(function () {
-    var apiBase = '/';
+    // Use server-injected apiBase if available (set in _Layout), otherwise default to '/'
+    var apiBase = (window.apiBase && window.apiBase !== '/') ? window.apiBase : '/';
 
     /* -------------------------------------------------------
        HELPERS

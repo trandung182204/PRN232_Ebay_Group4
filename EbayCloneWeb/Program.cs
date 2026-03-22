@@ -11,9 +11,19 @@ namespace EbayCloneWeb
 
             // Add services to the container.
             builder.Services.AddRazorPages();
-            builder.Services.AddHttpClient(Microsoft.Extensions.Options.Options.DefaultName, client =>
+            builder.Services.AddHttpClient(Microsoft.Extensions.Options.Options.DefaultName, (sp, client) =>
             {
-                var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5174/";
+                var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var env = sp.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+
+                var apiBaseUrl = config["ApiSettings:BaseUrl"];
+
+                if (string.IsNullOrWhiteSpace(apiBaseUrl))
+                {
+                    // Default to localhost in Development for local dev, otherwise use nginx reverse-proxy host inside Docker
+                    apiBaseUrl = env.IsDevelopment() ? "http://localhost:5174" : "http://nginx";
+                }
+
                 client.BaseAddress = new Uri(apiBaseUrl);
             });
             builder.Services.AddSingleton<Microsoft.AspNetCore.Http.IHttpContextAccessor, Microsoft.AspNetCore.Http.HttpContextAccessor>();

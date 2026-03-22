@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,6 +12,13 @@
     <link rel="stylesheet" href="~/EbayWeb.styles.css" asp-append-version="true" />
 </head>
 <body>
+
+    <script>
+        // Expose API base URL to client-side scripts. If not configured, fall back to relative root '/'.
+        window.apiBase = '@(Configuration["ApiSettings:BaseUrl"] ?? "/")';
+        // Ensure trailing slash
+        if (window.apiBase && !window.apiBase.endsWith('/')) window.apiBase += '/';
+    </script>
 
 <header>
     <nav class="eb-navbar">
