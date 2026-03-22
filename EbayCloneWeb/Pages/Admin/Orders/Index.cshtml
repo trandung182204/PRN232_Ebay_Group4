@@ -160,6 +160,7 @@
 
 
 <script>
+    const API_BASE = '@Model.ApiBaseUrl';
 
     async function updateStatus(id, status) {
         if (!status) return;
@@ -171,7 +172,7 @@
             return;
         }
 
-        const res = await fetch(`/api/order/${id}/status`,
+        const res = await fetch(`${API_BASE}/api/order/${id}/status`,
             {
                 method: 'PUT',
                 headers:

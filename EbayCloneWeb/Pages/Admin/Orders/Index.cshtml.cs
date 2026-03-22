@@ -7,17 +7,20 @@ namespace EbayCloneWeb.Pages.Admin.Orders
     public class IndexModel : PageModel
     {
         private readonly IHttpClientFactory _client;
+        private readonly IConfiguration _config;
 
         public List<OrderDTO> Orders = new();
 
-        public IndexModel(IHttpClientFactory client)
+        public IndexModel(IHttpClientFactory client, IConfiguration config)
         {
             _client = client;
+            _config = config;
         }
 
         public int TotalCount { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 50;
+        public string ApiBaseUrl => (_config["ApiSettings:BaseUrl"] ?? "http://localhost:5174").TrimEnd('/');
 
         public async Task OnGet(string? status, int page = 1, int pageSize = 50)
         {

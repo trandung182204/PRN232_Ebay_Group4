@@ -118,8 +118,15 @@ namespace EBayCloneAPI
             // ── KAN-16: Payment confirmation email handler ──
             builder.Services.AddScoped<IEventHandler<OrderPaidEvent>, OrderPaidEmailHandler>();
 
-            // ── KAN-17: Order status-change email handler ──
+            // ── KAN-17: Order status-change email handler (Cancelled) ──
             builder.Services.AddScoped<IEventHandler<OrderStatusChangedEvent>, OrderStatusChangedEmailHandler>();
+
+            // ── Delivery events: separate handlers for Delivered and Failed ──
+            builder.Services.AddScoped<IEventHandler<DeliverySuccessEvent>, DeliverySuccessEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<DeliveryFailedEvent>, DeliveryFailedEmailHandler>();
+
+            // ── Shipping event: "Your order is on the way" email ──
+            builder.Services.AddScoped<IEventHandler<OrderShippingEvent>, OrderShippingEmailHandler>();
 
             // Hosted cleanup service
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();

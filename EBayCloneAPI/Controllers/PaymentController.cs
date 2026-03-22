@@ -130,6 +130,20 @@ public class PaymentController : ControllerBase
                     });
                     order.Status = OrderStatus.Shipping;
                     await _context.SaveChangesAsync();
+
+                    // Publish OrderShippingEvent → gửi email "Your order is on the way"
+                    if (buyer != null && !string.IsNullOrEmpty(buyer.Email))
+                    {
+                        await _eventBus.PublishAsync(new OrderShippingEvent
+                        {
+                            OrderId        = order.Id,
+                            BuyerEmail     = buyer.Email,
+                            BuyerName      = buyer.Username ?? "Customer",
+                            TotalPrice     = order.TotalPrice,
+                            TrackingNumber = trackingCode,
+                            ShippedAt      = DateTime.UtcNow
+                        });
+                    }
                 }
             }
 
