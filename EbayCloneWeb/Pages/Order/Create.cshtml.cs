@@ -152,7 +152,7 @@ namespace EbayCloneWeb.Pages.Order
             // ============================
             // COD: chuyển đến trang Success để khách xem mã vận đơn
             // ============================
-            TempData["Success"] = $"Order #{orderId} created. Your tracking code is on the next page.";
+            TempData["Success"] = "Your order has been placed successfully! Check your tracking code below.";
             return RedirectToPage("/Order/Success", new { id = orderId });
         }
 

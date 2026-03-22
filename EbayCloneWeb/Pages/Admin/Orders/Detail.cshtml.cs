@@ -54,7 +54,7 @@ namespace EbayCloneWeb.Pages.Admin.Orders
 
     public class ProductDTO
     {
-        public string Name { get; set; }
+        public string Title { get; set; }
 
         public decimal Price { get; set; }
     }

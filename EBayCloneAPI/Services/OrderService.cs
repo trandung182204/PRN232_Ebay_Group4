@@ -110,6 +110,7 @@ namespace EBayCloneAPI.Services
             };
 
             _db.OrderItems.Add(item);
+            await _db.SaveChangesAsync();
 
             // 4️⃣ Create initial Payment record
             // COD: tạo bản ghi Payment (PendingPayment) ngay khi đặt đơn.
@@ -141,7 +142,7 @@ namespace EBayCloneAPI.Services
                         OrderId = order.Id,
                         Carrier = "FakeCarrier",
                         TrackingNumber = trackingCode,
-                        Status = "Pending",
+                        Status = OrderStatus.PendingPayment.ToString(),
                         EstimatedArrival = DateTime.UtcNow.AddDays(3)
                     });
                     // COD: không đổi Status sang Shipping, giữ PendingPayment cho thống nhất với giao diện (PayPal = Paid)
@@ -205,7 +206,7 @@ namespace EBayCloneAPI.Services
                     OrderId = order.Id,
                     Carrier = "FakeCarrier",
                     TrackingNumber = trackingCode,
-                    Status = "Pending",
+                    Status = OrderStatus.PendingPayment.ToString(),
                     EstimatedArrival = DateTime.UtcNow.AddDays(3)
                 });
                 order.Status = EBayAPI.Enums.OrderStatus.Shipping;
@@ -213,6 +214,28 @@ namespace EBayCloneAPI.Services
                 foreach (var hook in _shippingHooks)
                     await hook.OnShipmentCreated(order.Id, trackingCode);
                 _logger.LogInformation("Paid order {OrderId}: shipment created, tracking {TrackingCode}", order.Id, trackingCode);
+
+                // Publish OrderShippingEvent → gửi email "Your order is on the way"
+                var buyer = await _db.Users.FindAsync(order.BuyerId);
+                if (buyer != null && !string.IsNullOrEmpty(buyer.Email))
+                {
+                    try
+                    {
+                        await _eventBus.PublishAsync(new OrderShippingEvent
+                        {
+                            OrderId        = order.Id,
+                            BuyerEmail     = buyer.Email,
+                            BuyerName      = buyer.Username ?? "Customer",
+                            TotalPrice     = order.TotalPrice,
+                            TrackingNumber = trackingCode,
+                            ShippedAt      = DateTime.UtcNow
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to publish OrderShippingEvent for Order #{OrderId}", order.Id);
+                    }
+                }
             }
 
             // ── KAN-16 / KAN-18: Publish OrderPaidEvent ──────────────────
@@ -256,6 +279,27 @@ namespace EBayCloneAPI.Services
 
             order.Status = newStatus;
             await _db.SaveChangesAsync();
+
+            // Khi admin mark as Paid (COD): cập nhật Payment record + gửi email xác nhận thanh toán
+            if (newStatus == EBayAPI.Enums.OrderStatus.Paid)
+            {
+                var paidAt = DateTime.UtcNow;
+
+                var paymentRecord = await _db.Payments
+                    .Where(p => p.OrderId == orderId)
+                    .OrderByDescending(p => p.Id)
+                    .FirstOrDefaultAsync();
+
+                if (paymentRecord != null)
+                {
+                    paymentRecord.Status = EBayAPI.Enums.OrderStatus.Paid;
+                    paymentRecord.PaidAt = paidAt;
+                    await _db.SaveChangesAsync();
+                }
+
+                var paymentMethod = paymentRecord?.Method ?? "COD";
+                await PublishOrderPaidEventAsync(order, paymentMethod, paidAt);
+            }
 
             // ── KAN-17 / KAN-18: Publish OrderStatusChangedEvent ─────────
             await PublishOrderStatusChangedEventAsync(order, current, newStatus);
@@ -460,9 +504,11 @@ namespace EBayCloneAPI.Services
             EBayAPI.Enums.OrderStatus oldStatus,
             EBayAPI.Enums.OrderStatus newStatus)
         {
-            // Only notify buyer for Delivered and Failed
-            if (newStatus != EBayAPI.Enums.OrderStatus.Delivered &&
-                newStatus != EBayAPI.Enums.OrderStatus.Failed)
+            // Notify buyer for Shipping, Delivered, Failed, and Cancelled
+            if (newStatus != EBayAPI.Enums.OrderStatus.Shipping &&
+                newStatus != EBayAPI.Enums.OrderStatus.Delivered &&
+                newStatus != EBayAPI.Enums.OrderStatus.Failed &&
+                newStatus != EBayAPI.Enums.OrderStatus.Cancelled)
                 return;
 
             try
@@ -471,20 +517,68 @@ namespace EBayCloneAPI.Services
                 if (buyer == null || string.IsNullOrEmpty(buyer.Email))
                     return;
 
-                await _eventBus.PublishAsync(new OrderStatusChangedEvent
+                var changedAt = DateTime.UtcNow;
+
+                if (newStatus == EBayAPI.Enums.OrderStatus.Shipping)
                 {
-                    OrderId = order.Id,
-                    BuyerEmail = buyer.Email,
-                    BuyerName = buyer.Username ?? "Customer",
-                    OldStatus = oldStatus.ToString(),
-                    NewStatus = newStatus.ToString(),
-                    TotalPrice = order.TotalPrice,
-                    ChangedAt = DateTime.UtcNow
-                });
+                    var tracking = await _db.ShippingInfos
+                        .Where(s => s.OrderId == order.Id)
+                        .OrderByDescending(s => s.Id)
+                        .Select(s => s.TrackingNumber)
+                        .FirstOrDefaultAsync();
+
+                    await _eventBus.PublishAsync(new OrderShippingEvent
+                    {
+                        OrderId        = order.Id,
+                        BuyerEmail     = buyer.Email,
+                        BuyerName      = buyer.Username ?? "Customer",
+                        TotalPrice     = order.TotalPrice,
+                        TrackingNumber = tracking ?? string.Empty,
+                        ShippedAt      = changedAt
+                    });
+                }
+                else if (newStatus == EBayAPI.Enums.OrderStatus.Delivered)
+                {
+                    await _eventBus.PublishAsync(new DeliverySuccessEvent
+                    {
+                        OrderId     = order.Id,
+                        BuyerEmail  = buyer.Email,
+                        BuyerName   = buyer.Username ?? "Customer",
+                        OldStatus   = oldStatus.ToString(),
+                        TotalPrice  = order.TotalPrice,
+                        DeliveredAt = changedAt
+                    });
+                }
+                else if (newStatus == EBayAPI.Enums.OrderStatus.Failed)
+                {
+                    await _eventBus.PublishAsync(new DeliveryFailedEvent
+                    {
+                        OrderId    = order.Id,
+                        BuyerEmail = buyer.Email,
+                        BuyerName  = buyer.Username ?? "Customer",
+                        OldStatus  = oldStatus.ToString(),
+                        TotalPrice = order.TotalPrice,
+                        FailedAt   = changedAt
+                    });
+                }
+                else
+                {
+                    // Cancelled — dùng OrderStatusChangedEvent chung
+                    await _eventBus.PublishAsync(new OrderStatusChangedEvent
+                    {
+                        OrderId    = order.Id,
+                        BuyerEmail = buyer.Email,
+                        BuyerName  = buyer.Username ?? "Customer",
+                        OldStatus  = oldStatus.ToString(),
+                        NewStatus  = newStatus.ToString(),
+                        TotalPrice = order.TotalPrice,
+                        ChangedAt  = changedAt
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to publish OrderStatusChangedEvent for Order #{OrderId}", order.Id);
+                _logger.LogError(ex, "Failed to publish status-change event for Order #{OrderId}", order.Id);
             }
         }
 

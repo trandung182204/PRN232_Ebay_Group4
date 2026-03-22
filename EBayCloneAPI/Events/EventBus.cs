@@ -5,8 +5,9 @@ namespace EBayAPI.Events;
 
 /// <summary>
 /// Singleton in-memory event bus.
-/// Uses IServiceScopeFactory so scoped handlers (e.g. EmailService) are
-/// resolved safely inside a dedicated scope per publish call.
+/// Dispatches events to all registered handlers on a background thread (fire-and-forget)
+/// so the HTTP response is returned immediately without waiting for email/IO operations.
+/// Uses IServiceScopeFactory to safely resolve scoped handlers (e.g. EmailService).
 /// </summary>
 public sealed class EventBus : IEventBus
 {
@@ -19,27 +20,40 @@ public sealed class EventBus : IEventBus
         _logger = logger;
     }
 
-    public async Task PublishAsync<T>(T @event) where T : IEvent
+    public Task PublishAsync<T>(T @event) where T : IEvent
     {
         var eventName = typeof(T).Name;
-        _logger.LogInformation("[EventBus] Publishing {Event}", eventName);
+        _logger.LogInformation("[EventBus] Queuing {Event} for background dispatch", eventName);
 
-        using var scope = _scopeFactory.CreateScope();
-        var handlers = scope.ServiceProvider.GetServices<IEventHandler<T>>();
-
-        foreach (var handler in handlers)
+        // Fire-and-forget: chạy trên background thread, không block HTTP response
+        _ = Task.Run(async () =>
         {
-            var handlerName = handler.GetType().Name;
             try
             {
-                _logger.LogInformation("[EventBus] {Event} -> {Handler}", eventName, handlerName);
-                await handler.HandleAsync(@event);
+                using var scope = _scopeFactory.CreateScope();
+                var handlers = scope.ServiceProvider.GetServices<IEventHandler<T>>();
+
+                foreach (var handler in handlers)
+                {
+                    var handlerName = handler.GetType().Name;
+                    try
+                    {
+                        _logger.LogInformation("[EventBus] {Event} -> {Handler}", eventName, handlerName);
+                        await handler.HandleAsync(@event);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handler failure must NOT affect other handlers.
+                        _logger.LogError(ex, "[EventBus] Handler {Handler} failed for {Event}", handlerName, eventName);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // A handler failure must NOT stop the main flow.
-                _logger.LogError(ex, "[EventBus] Handler {Handler} failed for {Event}", handlerName, eventName);
+                _logger.LogError(ex, "[EventBus] Background dispatch failed for {Event}", eventName);
             }
-        }
+        });
+
+        return Task.CompletedTask;
     }
 }

@@ -1,5 +1,6 @@
 
 using System;
+using System.Text.Json.Serialization;
 using EBayAPI.Configurations;
 using EBayAPI.Events;
 using EBayAPI.Events.Handlers;
@@ -45,13 +46,11 @@ namespace EBayCloneAPI
 
             // Add services to the container.
 
+            // Trong Program.cs
             builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter()
-        );
-    });
+                .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             // CORS - allow frontend to call API during development
             builder.Services.AddCors(options =>
             {
@@ -119,8 +118,15 @@ namespace EBayCloneAPI
             // ── KAN-16: Payment confirmation email handler ──
             builder.Services.AddScoped<IEventHandler<OrderPaidEvent>, OrderPaidEmailHandler>();
 
-            // ── KAN-17: Order status-change email handler ──
+            // ── KAN-17: Order status-change email handler (Cancelled) ──
             builder.Services.AddScoped<IEventHandler<OrderStatusChangedEvent>, OrderStatusChangedEmailHandler>();
+
+            // ── Delivery events: separate handlers for Delivered and Failed ──
+            builder.Services.AddScoped<IEventHandler<DeliverySuccessEvent>, DeliverySuccessEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<DeliveryFailedEvent>, DeliveryFailedEmailHandler>();
+
+            // ── Shipping event: "Your order is on the way" email ──
+            builder.Services.AddScoped<IEventHandler<OrderShippingEvent>, OrderShippingEmailHandler>();
 
             // Hosted cleanup service
             builder.Services.AddHostedService<EBayCloneAPI.Services.OrderCleanupHostedService>();

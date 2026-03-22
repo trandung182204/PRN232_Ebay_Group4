@@ -375,6 +375,106 @@ public sealed class EmailService : IEmailService
     }
 
     // ─────────────────────────────────────────────────────────────
+    //  Order Shipping — "Your order is on the way" email
+    // ─────────────────────────────────────────────────────────────
+    public async Task SendOrderShippingAsync(OrderShippingEvent data)
+    {
+        var subject = $"Order #{data.OrderId} — Your order is on the way!";
+
+        var body = $"""
+            <!DOCTYPE html>
+            <html><head><meta charset="utf-8"/></head>
+            <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+            <table cellpadding="0" cellspacing="0" width="100%" style="background:#f4f4f4;padding:30px 0;">
+              <tr><td align="center">
+                <table cellpadding="0" cellspacing="0" width="580" style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
+
+                  <!-- HEADER -->
+                  <tr>
+                    <td style="background:#0064D2;padding:22px 32px;">
+                      <span style="font-size:28px;font-weight:900;letter-spacing:-1px;font-family:Arial;">
+                        <span style="color:#E53238;font-style:italic;">e</span><span style="color:#fff;font-style:italic;">b</span><span style="color:#F5AF02;font-style:italic;">a</span><span style="color:#86B817;font-style:italic;">y</span>
+                        <span style="color:rgba(255,255,255,.7);font-size:14px;font-weight:400;font-style:normal;">Clone</span>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- BANNER -->
+                  <tr>
+                    <td style="background:#e3f2fd;padding:18px 32px;border-left:4px solid #0064D2;">
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="font-size:28px;padding-right:12px;line-height:1;vertical-align:middle;">&#128666;</td>
+                          <td>
+                            <div style="font-size:17px;font-weight:700;color:#0a1f5c;">Your order is on the way!</div>
+                            <div style="font-size:13px;color:#555;margin-top:3px;">Order #{data.OrderId} &bull; {Hanoi(data.ShippedAt)}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- BODY -->
+                  <tr>
+                    <td style="padding:28px 32px;">
+                      <p style="margin:0 0 22px;color:#333;font-size:15px;">
+                        Hi <strong>{data.BuyerName}</strong>, great news! Your order has been handed to the carrier and is now on its way to you.
+                      </p>
+
+                      <!-- Tracking info -->
+                      <table cellpadding="0" cellspacing="0" width="100%" style="background:#f0f7ff;border:1px solid #c2dbf7;border-radius:8px;margin-bottom:22px;">
+                        <tr>
+                          <td style="padding:16px 20px;">
+                            <div style="font-size:12px;color:#767676;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Tracking Number</div>
+                            <div style="font-size:20px;font-weight:700;color:#0064D2;letter-spacing:1px;font-family:monospace;">{(string.IsNullOrEmpty(data.TrackingNumber) ? "—" : data.TrackingNumber)}</div>
+                            {(string.IsNullOrEmpty(data.TrackingNumber) ? "" : "<div style=\"font-size:12px;color:#555;margin-top:4px;\">Use this code to track your shipment on our website.</div>")}
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Order details -->
+                      <table cellpadding="0" cellspacing="0" width="100%" style="background:#f9f9f9;border-radius:6px;margin-bottom:22px;">
+                        <tr>
+                          <td style="padding:10px 16px;font-size:13px;color:#767676;width:140px;">Order ID</td>
+                          <td style="padding:10px 16px;font-size:13px;font-weight:600;color:#0064D2;">#{data.OrderId}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:10px 16px;font-size:13px;color:#767676;">Order Total</td>
+                          <td style="padding:10px 16px;font-size:13px;font-weight:700;color:#0064D2;">US ${data.TotalPrice:0.00}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:10px 16px;font-size:13px;color:#767676;">Shipped At</td>
+                          <td style="padding:10px 16px;font-size:13px;color:#555;">{Hanoi(data.ShippedAt)}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:10px 16px;font-size:13px;color:#767676;">Est. Delivery</td>
+                          <td style="padding:10px 16px;font-size:13px;color:#555;"><strong>3–7 business days</strong></td>
+                        </tr>
+                      </table>
+
+                      <p style="margin:0;color:#767676;font-size:13px;">
+                        If you have any questions about your shipment, please contact our support team.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- FOOTER -->
+                  <tr>
+                    <td style="background:#191919;padding:18px 32px;text-align:center;">
+                      <p style="color:#888;font-size:12px;margin:0;">&#169; 2026 eBayClone &#8212; PRN232 Group 4. All rights reserved.</p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td></tr>
+            </table>
+            </body></html>
+            """;
+
+        await SendAsync(data.BuyerEmail, subject, body);
+    }
+
+    // ─────────────────────────────────────────────────────────────
     //  Internal SMTP dispatcher — MailKit (Gmail STARTTLS)
     // ─────────────────────────────────────────────────────────────
     private async Task SendAsync(string toEmail, string subject, string htmlBody)

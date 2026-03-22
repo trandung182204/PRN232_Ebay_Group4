@@ -5,12 +5,13 @@ namespace EBayAPI.Events.Handlers;
 
 /// <summary>
 /// KAN-17: Listens to OrderStatusChangedEvent and sends a notification email
-/// when the order status becomes Delivered or Failed.
+/// when the order status becomes Cancelled.
+/// Delivered and Failed are handled by DeliverySuccessEmailHandler / DeliveryFailedEmailHandler.
 /// </summary>
 public sealed class OrderStatusChangedEmailHandler : IEventHandler<OrderStatusChangedEvent>
 {
     private static readonly HashSet<string> _notifyStatuses =
-        new(StringComparer.OrdinalIgnoreCase) { "Delivered", "Failed", "Cancelled" };
+        new(StringComparer.OrdinalIgnoreCase) { "Cancelled" };
 
     private readonly IEmailService _email;
     private readonly ILogger<OrderStatusChangedEmailHandler> _logger;

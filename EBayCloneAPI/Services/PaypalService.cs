@@ -83,8 +83,8 @@ public class PaypalService
                 brand_name = "Test Store",
                 landing_page = "LOGIN",
                 user_action = "PAY_NOW",
-                return_url = $"{_config["Frontend:BaseUrl"]}/api/payments/paypal-success",
-                cancel_url = $"{_config["Frontend:BaseUrl"]}/api/payments/paypal-cancel"
+                return_url = $"{_config["Backend:BaseUrl"]}/api/payments/paypal-success",
+                cancel_url = $"{_config["Backend:BaseUrl"]}/api/payments/paypal-cancel"
             }
             
         };

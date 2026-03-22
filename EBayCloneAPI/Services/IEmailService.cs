@@ -18,4 +18,9 @@ public interface IEmailService
     /// KAN-17: Send order status-change email (used for Delivered / Failed / Cancelled).
     /// </summary>
     Task SendOrderStatusChangeAsync(OrderStatusChangedEvent data);
+
+    /// <summary>
+    /// Send "Your order is on the way" email when order transitions to Shipping.
+    /// </summary>
+    Task SendOrderShippingAsync(OrderShippingEvent data);
 }

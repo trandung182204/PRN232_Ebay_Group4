@@ -95,7 +95,7 @@
                                 <td>
                                     @if (o.TrackingNumbers != null && o.TrackingNumbers.Count > 0)
                                     {
-                                        @foreach (var code in o.TrackingNumbers)
+                                        foreach (var code in o.TrackingNumbers)
                                         {
                                             <a asp-page="/Tracking/Index" asp-route-code="@code" target="_blank" class="d-block small text-eb-blue text-decoration-none" title="Tra cứu vận đơn">@code</a>
                                         }
@@ -160,6 +160,7 @@
 
 
 <script>
+    const API_BASE = '@Model.ApiBaseUrl';
 
     async function updateStatus(id, status) {
         if (!status) return;
@@ -171,7 +172,7 @@
             return;
         }
 
-        const res = await fetch(`/api/order/${id}/status`,
+        const res = await fetch(`${API_BASE}/api/order/${id}/status`,
             {
                 method: 'PUT',
                 headers:
