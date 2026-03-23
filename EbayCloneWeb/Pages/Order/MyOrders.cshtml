@@ -1,32 +1,32 @@
 @page
 @model EbayCloneWeb.Pages.Order.MyOrdersModel
 @{
-    ViewData["Title"] = "Đơn hàng của tôi";
+    ViewData["Title"] = "My Orders";
 }
 
 <div class="container-fluid px-4 py-4" style="max-width: 900px; margin: 0 auto;">
     <h1 class="h4 mb-4">
-        <i class="bi bi-bag-check me-2"></i>Đơn hàng của tôi
+        <i class="bi bi-bag-check me-2"></i>My Orders
     </h1>
 
     @* Lọc theo trạng thái *@
     <div class="mb-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto">
-                <label class="form-label small mb-0">Trạng thái</label>
+                <label class="form-label small mb-0">Status</label>
             </div>
             <div class="col-auto">
                 <select name="status" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">Tất cả</option>
-                    <option value="PendingPayment" selected="@(Model.StatusFilter == "PendingPayment")">Chờ thanh toán</option>
-                    <option value="Paid" selected="@(Model.StatusFilter == "Paid")">Đã thanh toán</option>
-                    <option value="Shipping" selected="@(Model.StatusFilter == "Shipping")">Đang giao</option>
-                    <option value="Delivered" selected="@(Model.StatusFilter == "Delivered")">Đã giao</option>
-                    <option value="Cancelled" selected="@(Model.StatusFilter == "Cancelled")">Đã hủy</option>
+                    <option value="">All</option>
+                    <option value="PendingPayment" selected="@(Model.StatusFilter == "PendingPayment")">Pending payment</option>
+                    <option value="Paid" selected="@(Model.StatusFilter == "Paid")">Paid</option>
+                    <option value="Shipping" selected="@(Model.StatusFilter == "Shipping")">Shipping</option>
+                    <option value="Delivered" selected="@(Model.StatusFilter == "Delivered")">Delivered</option>
+                    <option value="Cancelled" selected="@(Model.StatusFilter == "Cancelled")">Cancelled</option>
                 </select>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Lọc</button>
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
             </div>
         </form>
     </div>
@@ -35,8 +35,8 @@
     {
         <div class="alert alert-light border text-muted text-center py-5">
             <i class="bi bi-inbox" style="font-size: 2.5rem;"></i>
-            <p class="mt-2 mb-0">Bạn chưa có đơn hàng nào.</p>
-            <a asp-page="/Index" class="btn btn-primary btn-sm mt-2">Mua sắm ngay</a>
+            <p class="mt-2 mb-0">You don't have any orders yet.</p>
+            <a asp-page="/Index" class="btn btn-primary btn-sm mt-2">Shop now</a>
         </div>
     }
     else
@@ -45,10 +45,10 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Đơn #</th>
-                        <th>Ngày đặt</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Tổng tiền</th>
+                        <th>Order #</th>
+                        <th>Order date</th>
+                        <th>Status</th>
+                        <th class="text-end">Total</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -72,7 +72,7 @@
                             <td class="text-end fw-semibold text-danger">US $@o.TotalPrice.ToString("0.00")</td>
                             <td class="text-end">
                                 <a asp-page="/Order/Success" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">
-                                    Xem đơn &amp; mã vận đơn
+                                    View order &amp; tracking number
                                 </a>
                             </td>
                         </tr>
@@ -88,16 +88,16 @@
                     @if (Model.Response.page > 1)
                     {
                         <li class="page-item">
-                            <a class="page-link" asp-route-page="@(Model.Response.page - 1)" asp-route-status="@Model.StatusFilter">Trước</a>
+                            <a class="page-link" asp-route-page="@(Model.Response.page - 1)" asp-route-status="@Model.StatusFilter">Previous</a>
                         </li>
                     }
                     <li class="page-item disabled">
-                        <span class="page-link">Trang @Model.Response.page / @((Model.Response.total + Model.Response.pageSize - 1) / Model.Response.pageSize)</span>
+                        <span class="page-link">Page @Model.Response.page / @((Model.Response.total + Model.Response.pageSize - 1) / Model.Response.pageSize)</span>
                     </li>
                     @if (Model.Response.page * Model.Response.pageSize < Model.Response.total)
                     {
                         <li class="page-item">
-                            <a class="page-link" asp-route-page="@(Model.Response.page + 1)" asp-route-status="@Model.StatusFilter">Sau</a>
+                            <a class="page-link" asp-route-page="@(Model.Response.page + 1)" asp-route-status="@Model.StatusFilter">Next</a>
                         </li>
                     }
                 </ul>

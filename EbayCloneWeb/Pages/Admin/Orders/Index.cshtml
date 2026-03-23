@@ -33,7 +33,7 @@
                     <i class="bi bi-funnel"></i> Apply filter
                 </button>
             </form>
-            <p class="mb-0 small text-muted mt-2">Hiển thị tất cả đơn hàng (không lọc theo user). Tổng: <strong>@Model.TotalCount</strong> đơn.</p>
+            <p class="mb-0 small text-muted mt-2">Showing all orders (not filtered by user). Total: <strong>@Model.TotalCount</strong> orders.</p>
         </div>
     </div>
 
@@ -97,7 +97,7 @@
                                     {
                                         foreach (var code in o.TrackingNumbers)
                                         {
-                                            <a asp-page="/Tracking/Index" asp-route-code="@code" target="_blank" class="d-block small text-eb-blue text-decoration-none" title="Tra cứu vận đơn">@code</a>
+                                            <a asp-page="/Tracking/Index" asp-route-code="@code" target="_blank" class="d-block small text-eb-blue text-decoration-none" title="Track shipment">@code</a>
                                         }
                                     }
                                     else
@@ -140,15 +140,15 @@
             @if (Model.TotalCount > Model.PageSize)
             {
                 <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                    <span class="small text-muted">Trang @Model.Page / @((Model.TotalCount + Model.PageSize - 1) / Model.PageSize)</span>
+                    <span class="small text-muted">Page @Model.Page / @((Model.TotalCount + Model.PageSize - 1) / Model.PageSize)</span>
                     <nav>
                         @if (Model.Page > 1)
                         {
-                            <a class="btn btn-sm btn-outline-secondary me-1" asp-route-status="@Request.Query["status"]" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
+                            <a class="btn btn-sm btn-outline-secondary me-1" asp-route-status="@Request.Query["status"]" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize">Previous</a>
                         }
                         @if (Model.Page * Model.PageSize < Model.TotalCount)
                         {
-                            <a class="btn btn-sm btn-outline-secondary" asp-route-status="@Request.Query["status"]" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-route-status="@Request.Query["status"]" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize">Next</a>
                         }
                     </nav>
                 </div>
