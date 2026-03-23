@@ -32,7 +32,7 @@ namespace EbayCloneWeb.Pages.Tracking
 
             if (string.IsNullOrWhiteSpace(TrackingCodeInput))
             {
-                ErrorMessage = "Vui lòng nhập mã vận đơn.";
+                ErrorMessage = "Please enter the tracking number.";
                 return Page();
             }
 
@@ -52,15 +52,15 @@ namespace EbayCloneWeb.Pages.Tracking
                 {
                     var err = JsonSerializer.Deserialize<JsonElement>(body);
                     if (err.TryGetProperty("error", out var e))
-                        ErrorMessage = e.GetString() ?? "Mã vận đơn không tồn tại.";
+                        ErrorMessage = e.GetString() ?? "Tracking number not found.";
                     else
-                        ErrorMessage = "Mã vận đơn không tồn tại.";
+                        ErrorMessage = "Tracking number not found.";
                 }
                 catch
                 {
                     ErrorMessage = res.StatusCode == HttpStatusCode.NotFound
-                        ? "Mã vận đơn không tồn tại."
-                        : "Có lỗi khi tra cứu.";
+                        ? "Tracking number not found."
+                        : "An error occurred while tracking.";
                 }
 
             }

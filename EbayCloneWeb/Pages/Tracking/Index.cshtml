@@ -1,32 +1,32 @@
 @page
 @model EbayCloneWeb.Pages.Tracking.IndexModel
 @{
-    ViewData["Title"] = "Tra cứu vận đơn";
+    ViewData["Title"] = "Track shipment";
 }
 
 <div class="container py-5" style="max-width: 640px; margin: 0 auto;">
     <div class="text-center mb-4">
         <h1 class="h3 mb-2">
-            <i class="bi bi-truck text-primary me-2"></i>Tra cứu vận đơn
+            <i class="bi bi-truck text-primary me-2"></i>Track shipment
         </h1>
-        <p class="text-muted">Nhập mã vận đơn để theo dõi trạng thái giao hàng</p>
+        <p class="text-muted">Enter the tracking number to check delivery status</p>
     </div>
 
     <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
         <div class="card-body p-4">
             <form method="post" asp-page-handler="" class="row g-2 align-items-end">
                 <div class="col">
-                    <label class="form-label small text-muted">Mã vận đơn</label>
+                    <label class="form-label small text-muted">Tracking number</label>
                     <input type="text"
                            class="form-control form-control-lg"
                            name="trackingCode"
                            value="@Model.TrackingCodeInput"
-                           placeholder="VD: TRK-A1B2C3D4"
+                           placeholder="e.g.: TRK-A1B2C3D4"
                            required />
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary btn-lg px-4">
-                        <i class="bi bi-search me-1"></i> Tra cứu
+                        <i class="bi bi-search me-1"></i> Track
                     </button>
                 </div>
             </form>
@@ -45,16 +45,16 @@
         {
             <div class="card shadow-sm border-0 rounded-3 mt-4 overflow-hidden">
                 <div class="card-header bg-light py-3">
-                    <strong><i class="bi bi-box-seam me-2"></i>Kết quả tra cứu</strong>
+                    <strong><i class="bi bi-box-seam me-2"></i>Tracking result</strong>
                 </div>
                 <div class="card-body p-4">
                     <table class="table table-borderless mb-0">
                         <tr>
-                            <td class="text-muted" style="width: 140px;">Mã vận đơn</td>
+                            <td class="text-muted" style="width: 140px;">Tracking number</td>
                             <td class="fw-semibold">@Model.Result.TrackingNumber</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Trạng thái</td>
+                            <td class="text-muted">Status</td>
                             <td>
                                 @{
                                     var status = (Model.Result.Status ?? "Pending").ToLowerInvariant();
@@ -72,21 +72,21 @@
                         @if (Model.Result.OrderId.HasValue)
                         {
                             <tr>
-                                <td class="text-muted">Mã đơn hàng</td>
+                                <td class="text-muted">Order ID</td>
                                 <td class="fw-semibold">#@Model.Result.OrderId</td>
                             </tr>
                         }
                         @if (!string.IsNullOrEmpty(Model.Result.Carrier))
                         {
                             <tr>
-                                <td class="text-muted">Đơn vị vận chuyển</td>
+                                <td class="text-muted">Carrier</td>
                                 <td>@Model.Result.Carrier</td>
                             </tr>
                         }
                         @if (Model.Result.EstimatedArrival.HasValue)
                         {
                             <tr>
-                                <td class="text-muted">Dự kiến giao</td>
+                                <td class="text-muted">Estimated arrival</td>
                                 <td>@Model.Result.EstimatedArrival.Value.ToString("dd/MM/yyyy")</td>
                             </tr>
                         }
